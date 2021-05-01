@@ -19,9 +19,26 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import include
 from dashboard import views
+
 #from django.views.generic import RedirectView
+from django.urls import include, path
+from rest_framework import routers
+
+#from rest_framework.urlpatterns import format_suffix_patterns
+
+from rest_framework.routers import DefaultRouter
+
+router = DefaultRouter()
+router.register(r'snippets', views.SnippetViewSet)
+router.register(r'users', views.UserViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
     path('', views.index, name='index'),
+    
+    path('api-auth/', include('rest_framework.urls')),
+
+    path('api/', include(router.urls)),
+
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
