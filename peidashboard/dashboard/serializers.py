@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User, Group
 from rest_framework import serializers
 
-from .models import Snippet, LANGUAGE_CHOICES, STYLE_CHOICES
+from .models import Document, Snippet, LANGUAGE_CHOICES, STYLE_CHOICES
 
 class SnippetSerializer(serializers.HyperlinkedModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.username')
@@ -19,6 +19,13 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
         model = User
         fields = ['url', 'id', 'username', 'snippets']
 
+class DocumentSerializer(serializers.HyperlinkedModelSerializer):
+    #owner = serializers.ReadOnlyField(source='owner.username')
+    #downloadlink = serializers.ReadOnlyField()
+
+    class Meta:
+        model = Document
+        fields = ['url', 'id', 'title', 'downloadlink']# 'docfile']
 
 class GroupSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:

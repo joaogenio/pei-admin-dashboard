@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 
 from pathlib import Path
 
+import os
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
 
@@ -25,8 +27,8 @@ SECRET_KEY = '5tsso3er4@!m(zh)h&qa&dqy=q6m+8eqnrizzw+zb=z*zhnx-3'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['dashboard.pei','127.0.0.4', '192.168.1.47']
+#ALLOWED_HOSTS = []
 
 # Application definition
 
@@ -119,10 +121,19 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
-STATIC_URL = 'dashboard/static/'
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
+#STATIC_URL = '/dashboard/static/'
+#STATIC_ROOT = '/dashboard/static/'
+STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static')
+STATIC_URL = 'static/'
 
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10
 }
+
+
+#MEDIA_URL = "/media_cdn/"
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media_cdn')
+#MEDIA_ROOT = 'media_cdn'

@@ -1,7 +1,7 @@
 {% extends "base_generic.html" %}
 
 {% block content %}
-  <h1>Local Library Home</h1>
+<!-- <h1>Local Library Home</h1>
   <p>Welcome to LocalLibrary, a website developed by <em>Mozilla Developer Network</em>!</p>
   <h2>Dynamic content</h2>
   <p>The library has the following record counts:</p>
@@ -10,19 +10,7 @@
     <li><strong>Copies:</strong> {{ num_instances }}</li>
     <li><strong>Copies available:</strong> {{ num_instances_available }}</li>
     <li><strong>Authors:</strong> {{ num_authors }}</li>
-  </ul>
-
-  <!-- List of uploaded documents -->
-  {% if documents %}
-  All documents in the database:
-  <ul>
-      {% for document in documents %}
-          <li><a href="{{ document.docfile.url }}">{{ document.docfile.name }}</a></li>
-      {% endfor %}
-  </ul>
-{% else %}
-  <p>No documents.</p>
-{% endif %}
+  </ul> -->
 
 <!-- Upload form. Note enctype attribute! -->
 <form action="{% url 'index' %}" method="POST" enctype="multipart/form-data">
@@ -33,10 +21,33 @@
   <p>{{ form.docfile.label_tag }} {{ form.docfile.help_text }}</p>
 
   <p>
-      {{ form.docfile.errors }}
-      {{ form.docfile }}
+    {{ form.docfile.errors }}
+    {{ form.docfile }}
   </p>
 
-  <p><input type="submit" value="Upload"/></p>
+  <p><input name="file_upload" type="submit" value="Upload" /></p>
 </form>
+
+<!-- List of uploaded documents -->
+{% if documents %}
+All documents in the database:
+<ul>
+  {% for document in documents %}
+  <li>
+    <form action="" method="POST">
+      {% csrf_token %}
+      <input name="doc_pk" type="hidden" value="{{ document.id }}" />
+      <input name="doc_delete" type="submit" value="Delete" />
+      <input name="doc_download" type="submit" value="Download" />
+      <a href="{{ document.downloadlink }}">{{ document.docfile.name }}</a>
+    </form>
+  </li>
+
+  {% endfor %}
+</ul>
+{% else %}
+<p>No documents.</p>
+{% endif %}
+
+
 {% endblock %}

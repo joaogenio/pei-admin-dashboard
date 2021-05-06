@@ -31,6 +31,7 @@ from rest_framework.routers import DefaultRouter
 router = DefaultRouter()
 router.register(r'snippets', views.SnippetViewSet)
 router.register(r'users', views.UserViewSet)
+router.register(r'documents', views.DocumentViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -39,6 +40,8 @@ urlpatterns = [
     
     path('api-auth/', include('rest_framework.urls')),
 
-    path('api/', include(router.urls)),
+    path('api/', include(router.urls), name='api'),
+
+    path('download/<slug>', views.file_view, name='file_view')
 
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
