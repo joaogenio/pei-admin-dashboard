@@ -25,7 +25,7 @@
     {{ form.docfile }}
   </p>
 
-  <p><input name="file_upload" type="submit" value="Upload" /></p>
+  <p><input class="btn btn-outline-dark" name="file_upload" type="submit" value="Upload" /></p>
 </form>
 
 <!-- List of uploaded documents -->
@@ -37,8 +37,8 @@ All documents in the database:
     <form action="" method="POST">
       {% csrf_token %}
       <input name="doc_pk" type="hidden" value="{{ document.id }}" />
-      <input name="doc_delete" type="submit" value="Delete" />
-      <input name="doc_download" type="submit" value="Download" />
+      <input class="btn btn-outline-dark" name="doc_delete" type="submit" value="Delete" />
+      <input class="btn btn-outline-dark" name="doc_download" type="submit" value="Download" />
       <a href="{{ document.downloadlink }}">{{ document.docfile.name }}</a>
     </form>
   </li>
