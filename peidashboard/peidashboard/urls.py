@@ -29,16 +29,17 @@ from rest_framework import routers
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
-router.register(r'snippets', views.SnippetViewSet)
-router.register(r'users', views.UserViewSet)
+#router.register(r'snippets', views.SnippetViewSet)
+#router.register(r'users', views.UserViewSet)
 router.register(r'documents', views.DocumentViewSet)
+router.register(r'crops', views.CropViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
 
     path('', views.index, name='index'),
     
-    path('api-auth/', include('rest_framework.urls')),
+    path('api-auth/', include('rest_framework.urls'), name='api-auth'),
 
     path('api/', include(router.urls), name='api'),
 

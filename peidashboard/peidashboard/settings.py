@@ -27,7 +27,7 @@ SECRET_KEY = '5tsso3er4@!m(zh)h&qa&dqy=q6m+8eqnrizzw+zb=z*zhnx-3'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['dashboard.pei','127.0.0.1', '192.168.1.47', 'localhost']
+ALLOWED_HOSTS = ['dashboard.pei','127.0.0.4', '192.168.1.47']
 #ALLOWED_HOSTS = []
 
 # Application definition

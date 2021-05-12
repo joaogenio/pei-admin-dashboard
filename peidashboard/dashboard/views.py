@@ -5,9 +5,9 @@ from django.contrib.auth.models import User, Group
 from rest_framework import viewsets
 from rest_framework import permissions
 
-from .serializers import UserSerializer, GroupSerializer, DocumentSerializer
+from .serializers import UserSerializer, GroupSerializer, DocumentSerializer, CropSerializer
 from .forms import UploadFileForm
-from .models import Document
+from .models import Document, Crop
 
 
 # from django.http import HttpResponse, JsonResponse
@@ -49,6 +49,8 @@ import sys
 
 from django.conf import settings
 
+from django.contrib.sites.shortcuts import get_current_site
+
 # Create your views here.
 # https://github.com/axelpale/minimal-django-file-upload-example/blob/master/src/for_django_3-0/myapp/views.py
 # https://www.django-rest-framework.org/tutorial/quickstart/#serializers
@@ -59,19 +61,28 @@ from django.conf import settings
 @api_view(['GET'])
 def api_root(request, format=None):
 	return Response({
-		'users': reverse('user-list', request=request, format=format),
-		'snippets': reverse('snippet-list', request=request, format=format),
+		#'users': reverse('user-list', request=request, format=format),
+		#'snippets': reverse('snippet-list', request=request, format=format),
 		'documents': reverse('document-list', request=request, format=format)
 	})
+
+class CropViewSet(viewsets.ModelViewSet):
+	queryset = Crop.objects.all()
+	serializer_class = CropSerializer
+	permission_classes = [permissions.IsAuthenticatedOrReadOnly,
+						  IsOwnerOrReadOnly]
+
+	def perform_create(self, serializer):
+		serializer.save()
 
 class DocumentViewSet(viewsets.ModelViewSet):
 	queryset = Document.objects.all()
 	serializer_class = DocumentSerializer
-	#permission_classes = [permissions.IsAuthenticatedOrReadOnly,
-	#					  IsOwnerOrReadOnly]
+	permission_classes = [permissions.IsAuthenticatedOrReadOnly,
+						  IsOwnerOrReadOnly]
 
-	#def perform_create(self, serializer):
-	#	serializer.save(owner=self.request.user)
+	def perform_create(self, serializer):
+		serializer.save()
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
 	"""
@@ -110,33 +121,37 @@ class GroupViewSet(viewsets.ModelViewSet):
 	serializer_class = GroupSerializer
 	permission_classes = [permissions.IsAuthenticated]
 
-from django.contrib.sites.shortcuts import get_current_site
+#@login_required
 def index(request):
-	form = UploadFileForm()
-	if request.method == 'POST':
-		if 'file_upload' in request.POST:
-			form = UploadFileForm(request.POST, request.FILES)
-			# Document.objects.all().delete()
-			if form.is_valid():
-				newdoc = Document(docfile=request.FILES['docfile'])
-				newdoc.save(path=get_current_site(request).domain)
-				return redirect('index')
-		elif 'doc_delete' in request.POST:
-			doc = Document.objects.get(id=int(request.POST['doc_pk']))
-			filename = os.path.dirname(os.path.abspath(__file__))+'/../media_cdn/'+str(doc.docfile)
-			#print("Deleting", 'media_cdn/'+str(doc.docfile))
-			#os.remove('/media_cdn/'+str(doc.docfile))
-			print("Deleting", filename)
-			os.remove(filename)
-			doc.delete()
-		elif 'doc_download' in request.POST:
-			return serve_file(request, {})
+	if request.user.is_authenticated:
+		form = UploadFileForm()
+		if request.method == 'POST':
+			if 'file_upload' in request.POST:
+				form = UploadFileForm(request.POST, request.FILES)
+				# Document.objects.all().delete()
+				if form.is_valid():
+					for f in request.FILES.getlist('docfile'):
+						#newdoc = Document(docfile=request.FILES['docfile'])
+						newdoc = Document(docfile=f, title=request.POST['title'])
+						newdoc.save()
+					return redirect('index')
+			elif 'doc_delete' in request.POST:
+				doc = Document.objects.get(id=int(request.POST['doc_pk']))
+				filename = os.path.dirname(os.path.abspath(__file__))+'/../media_cdn/'+str(doc.docfile)
+				#print("Deleting", 'media_cdn/'+str(doc.docfile))
+				#os.remove('/media_cdn/'+str(doc.docfile))
+				#print("Deleting", filename)
+				os.remove(filename)
+				doc.delete()
+			elif 'doc_download' in request.POST:
+				return serve_file(request, {})
 
-	documents = Document.objects.all()
+		documents = Document.objects.all()
 
-	context = {'documents': documents, 'form': form}
+		context = {'documents': documents, 'form': form}
 
-	return render(request, 'index.html', context)
+		return render(request, 'index.html', context)
+	return redirect('/api-auth/login/?next=/')
 
 #@login_required
 def file_view(request, slug):
@@ -151,19 +166,19 @@ def serve_file(request, context, slug=''):
 		print('DOWNLOAD BUTTON')
 		doc = Document.objects.get(id=int(request.POST['doc_pk']))
 	else:
-		print('DOWNLOAD URL')
-		print('AAAA', slug)
+		#print('DOWNLOAD URL')
+		#print('AAAA', slug)
 		doc = Document.objects.get(docfile= ('media/'+slug) )
-		print('DOC', doc)
+		#print('DOC', doc)
 	filename = "/var/www/myfile.xyz"
 	filename = settings.MEDIA_ROOT +'/'+ doc.docfile.name
-	print('OLEOLE', filename)
+	#print('OLEOLE', filename)
 	response = HttpResponse(content_type='application/force-download')
 	downloadname = filename.split('/')[-1]
 	response['Content-Disposition']='attachment;filename="%s"'%downloadname
 	response["X-Sendfile"] = filename
 	response['Content-length'] = os.path.getsize(filename)
-	print(os.path.getsize(filename))
+	#print(os.path.getsize(filename))
 	return response
 	#return redirect('index')
 	#pass

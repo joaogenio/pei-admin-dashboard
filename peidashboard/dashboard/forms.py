@@ -1,4 +1,5 @@
 from django import forms
 
 class UploadFileForm(forms.Form):
-    docfile = forms.FileField(label='Insert file')
+    title = forms.CharField(label='Title', required=False, max_length=100)
+    docfile = forms.FileField(label='Insert file', widget=forms.ClearableFileInput(attrs={'multiple': True}))
