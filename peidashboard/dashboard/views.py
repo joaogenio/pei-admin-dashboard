@@ -5,9 +5,9 @@ from django.contrib.auth.models import User, Group
 from rest_framework import viewsets
 from rest_framework import permissions
 
-from .serializers import UserSerializer, GroupSerializer, DocumentSerializer, CropSerializer
+from .serializers import SpaceSerializer, AgentGroupSerializer, AgentSerializer, AgentUpdateSerializer, UserSerializer, GroupSerializer, DocumentSerializer, CropSerializer
 from .forms import UploadFileForm
-from .models import Document, Crop
+from .models import Space, AgentGroup, Agent, AgentUpdate, Document, Crop
 
 
 # from django.http import HttpResponse, JsonResponse
@@ -66,11 +66,45 @@ def api_root(request, format=None):
 		'documents': reverse('document-list', request=request, format=format)
 	})
 
+class SpaceViewSet(viewsets.ModelViewSet):
+	queryset = Space.objects.all()
+	serializer_class = SpaceSerializer
+	permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+	def perform_create(self, serializer):
+		serializer.save()
+	
+	def perform_destroy(self, instance):
+		return super().perform_destroy(instance)
+
+class AgentGroupViewSet(viewsets.ModelViewSet):
+	queryset = AgentGroup.objects.all()
+	serializer_class = AgentGroupSerializer
+	permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+	def perform_create(self, serializer):
+		serializer.save()
+
+class AgentViewSet(viewsets.ModelViewSet):
+	queryset = Agent.objects.all()
+	serializer_class = AgentSerializer
+	permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+	def perform_create(self, serializer):
+		serializer.save()
+
+class AgentUpdateViewSet(viewsets.ModelViewSet):
+	queryset = AgentUpdate.objects.all()
+	serializer_class = AgentUpdateSerializer
+	permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+	def perform_create(self, serializer):
+		serializer.save()
+
 class CropViewSet(viewsets.ModelViewSet):
 	queryset = Crop.objects.all()
 	serializer_class = CropSerializer
-	permission_classes = [permissions.IsAuthenticatedOrReadOnly,
-						  IsOwnerOrReadOnly]
+	permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 	def perform_create(self, serializer):
 		serializer.save()
@@ -78,8 +112,7 @@ class CropViewSet(viewsets.ModelViewSet):
 class DocumentViewSet(viewsets.ModelViewSet):
 	queryset = Document.objects.all()
 	serializer_class = DocumentSerializer
-	permission_classes = [permissions.IsAuthenticatedOrReadOnly,
-						  IsOwnerOrReadOnly]
+	permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 	def perform_create(self, serializer):
 		serializer.save()

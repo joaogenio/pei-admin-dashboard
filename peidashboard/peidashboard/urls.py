@@ -33,6 +33,10 @@ router = DefaultRouter()
 #router.register(r'users', views.UserViewSet)
 router.register(r'documents', views.DocumentViewSet)
 router.register(r'crops', views.CropViewSet)
+router.register(r'agentupdates', views.AgentUpdateViewSet)
+router.register(r'agent', views.AgentViewSet)
+router.register(r'agentgroups', views.AgentGroupViewSet)
+router.register(r'spaces', views.SpaceViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),

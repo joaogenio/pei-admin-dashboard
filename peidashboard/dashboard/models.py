@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models.deletion import SET_NULL
 
 from pygments.lexers import get_all_lexers
 from pygments.styles import get_all_styles
@@ -67,7 +68,7 @@ class Space(models.Model):
         super(Space, self).save(*args, **kwargs)
         groupname = "Grp_" + self.name
         if AgentGroup.objects.filter(name=groupname).count() == 0:
-            newgroup = AgentGroup(name=groupname, space=self.pk)
+            newgroup = AgentGroup(name=groupname, space=Space.objects.get(pk=self.pk))
             newgroup.save()
 
 class AgentGroup(models.Model):
@@ -83,6 +84,16 @@ class Agent(models.Model):
 
     class Meta:
         ordering = ['group', 'name']
+    
+    def save(self, *args, **kwargs):
+        super(Agent, self).save(*args, **kwargs)
+        if AgentUpdate.objects.filter(pk=self.pk).count() == 0:
+            update = AgentUpdate(agent=Agent.objects.get(pk=self.pk), content_confirm=False)
+            update.save()
+        else:
+            update = AgentUpdate.objects.get(pk=self.pk)
+            update.content_confirm = False
+            update.save()
 
 class AgentUpdate(models.Model):
     agent = models.OneToOneField(

@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User, Group
 from rest_framework import serializers
 
-from .models import Document, Snippet, Crop, LANGUAGE_CHOICES, STYLE_CHOICES
+from .models import Space, AgentGroup, Agent, AgentUpdate, Document, Snippet, Crop, LANGUAGE_CHOICES, STYLE_CHOICES
 
 
 class SnippetSerializer(serializers.HyperlinkedModelSerializer):
@@ -23,6 +23,30 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
         model = User
         fields = ['url', 'id', 'username', 'snippets']
 
+class SpaceSerializer(serializers.HyperlinkedModelSerializer):
+
+    class Meta:
+        model = Space
+        fields = ['url', 'id', 'name']
+
+class AgentGroupSerializer(serializers.HyperlinkedModelSerializer):
+
+    class Meta:
+        model = AgentGroup
+        fields = ['url', 'id', 'name', 'space']
+
+class AgentSerializer(serializers.HyperlinkedModelSerializer):
+
+    class Meta:
+        model = Agent
+        fields = ['url', 'id', 'name', 'group']
+
+class AgentUpdateSerializer(serializers.HyperlinkedModelSerializer):
+    agent = AgentSerializer()
+
+    class Meta:
+        model = AgentUpdate
+        fields = ['url', 'agent', 'contentid', 'content_confirm']
 
 class CropSerializer(serializers.HyperlinkedModelSerializer):
 
