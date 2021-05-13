@@ -18,19 +18,24 @@
   {{ message }}
   <p>{{ form.non_field_errors }}</p>
 
-  <p>{{ form.title.label_tag }} {{ form.title.help_text }}</p>
+  <p>{{ form.title.label_tag }}</p>
   <p>
     {{ form.title.errors }}
     {{ form.title }}
   </p>
-
-  <p>{{ form.docfile.label_tag }} {{ form.docfile.help_text }}</p>
+  <p>{{ form.docfile.label_tag }}</p>
+  
   <p>
-    {{ form.docfile.errors }}
-    {{ form.docfile }}
+    <!-- {{ form.docfile.errors }}
+    {{ form.docfile }} -->
+
+    <div class="custom-file">
+      <input type="file" class="custom-file-input" name="docfile" multiple="" required="" id="id_docfile">
+      <label class="custom-file-label" for="id_docfile">Choose files</label>
+    </div>
   </p>
 
-  <p><input name="file_upload" type="submit" value="Upload" /></p>
+  <p><input class="btn btn-outline-dark" name="file_upload" type="submit" value="Upload" /></p>
 </form>
 
 <!-- List of uploaded documents -->
@@ -42,8 +47,8 @@ All documents in the database:
     <form action="" method="POST">
       {% csrf_token %}
       <input name="doc_pk" type="hidden" value="{{ document.id }}" />
-      <input name="doc_delete" type="submit" value="Delete" />
-      <input name="doc_download" type="submit" value="Download" />
+      <input class="btn btn-outline-dark" name="doc_delete" type="submit" value="Delete" />
+      <input class="btn btn-outline-dark" name="doc_download" type="submit" value="Download" />
       <a href="{{ document.downloadlink }}">{{ document.docfile.name }}</a> {{ document.title }}
     </form>
   </li>
@@ -54,5 +59,17 @@ All documents in the database:
 <p>No documents.</p>
 {% endif %}
 
+<script>
+  document.querySelector('.custom-file-input').addEventListener('change',function(e){
+    var fileslength = document.getElementById("id_docfile").files.length
+    if (fileslength == 1) {
+      var fileName = document.getElementById("id_docfile").files[0].name;
+    } else {
+      var fileName = fileslength + " files selected"
+    }
+    var nextSibling = e.target.nextElementSibling
+    nextSibling.innerText = fileName
+  })
+</script>
 
 {% endblock %}
