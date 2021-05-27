@@ -47,6 +47,8 @@ urlpatterns = [
 
     path('api/', include(router.urls), name='api'),
 
-    path('download/<slug>', views.file_view, name='file_view')
+    path('download/<slug>', views.file_view, name='file_view'),
+
+    path('control/<int:id>', views.control_view, name='control_view')
 
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

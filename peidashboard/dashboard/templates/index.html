@@ -12,55 +12,101 @@
     <li><strong>Authors:</strong> {{ num_authors }}</li>
   </ul> -->
 
+<br />
+Upload documents:
+<br /><br />
 <!-- Upload form. Note enctype attribute! -->
-<form action="{% url 'index' %}" method="POST" enctype="multipart/form-data">
+<form class='form-inline' action="{% url 'index' %}" method="POST" enctype="multipart/form-data">
   {% csrf_token %}
   {{ message }}
+
   <p>{{ form.non_field_errors }}</p>
 
-  <p>{{ form.title.label_tag }}</p>
-  <p>
-    {{ form.title.errors }}
-    {{ form.title }}
-  </p>
-  <p>{{ form.docfile.label_tag }}</p>
-  
-  <p>
-    <!-- {{ form.docfile.errors }}
+  <div class="col-4">
+    <!-- {{ form.docfile.label_tag }}
+    {{ form.docfile.errors }}
     {{ form.docfile }} -->
 
-    <div class="custom-file">
+    <div style="margin-left: 6%;" class="custom-file">
       <input type="file" class="custom-file-input" name="docfile" multiple="" required="" id="id_docfile">
       <label class="custom-file-label" for="id_docfile">Choose files</label>
     </div>
-  </p>
+  </div>
 
-  <p><input class="btn btn-outline-dark" name="file_upload" type="submit" value="Upload" /></p>
+
+  <div style="margin-left: 2%;" class="col-auto">
+    <!-- {{ form.title.label_tag }} -->
+    {{ form.title.errors }}
+    Title:
+    {{ form.title }}
+  </div>
+
+  <div class="col-auto">
+    <input class="btn btn-outline-dark" name="file_upload" type="submit" value="Upload" />
+  </div>
+
 </form>
-
+<br />
 <!-- List of uploaded documents -->
 {% if documents %}
 All documents in the database:
+<br /><br />
 <ul>
-  {% for document in documents %}
+  <!-- { for document in documents %}
   <li>
     <form action="" method="POST">
       {% csrf_token %}
       <input name="doc_pk" type="hidden" value="{{ document.id }}" />
       <input class="btn btn-outline-dark" name="doc_delete" type="submit" value="Delete" />
       <input class="btn btn-outline-dark" name="doc_download" type="submit" value="Download" />
-      <a href="{{ document.downloadlink }}">{{ document.docfile.name }}</a> {{ document.title }}
+      <a href="{{ document.downloadlink }}">{{ document.docfile.name }}</a> {{ document.title }} {{ document.viewcount
+      }} {{ document.viewtime }}
     </form>
-  </li>
+  </li> -->
 
-  {% endfor %}
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th scope="col">ID</th>
+        <th scope="col">Document</th>
+        <th scope="col">Title</th>
+        <th scope="col">View Time</th>
+        <th scope="col"></th>
+        <th scope="col"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for document in documents %}
+      <tr>
+        <td>{{ document.id }}</td>
+        <td>{{ document.docname }}</td>
+        <td>{{ document.title }}</td>
+        <td>{{ document.pretty_viewtime }}</td>
+        <td>
+          <form action="" method="POST">
+            {% csrf_token %}
+            <input name="doc_pk" type="hidden" value="{{ document.id }}" />
+            <input class="btn btn-outline-dark" name="doc_delete" type="submit" value="Delete" />
+          </form>
+        </td>
+        <td>
+          <form action="" method="POST">
+            {% csrf_token %}
+            <input name="doc_pk" type="hidden" value="{{ document.id }}" />
+            <input class="btn btn-outline-dark" name="doc_download" type="submit" value="Download" />
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 </ul>
 {% else %}
 <p>No documents.</p>
 {% endif %}
 
 <script>
-  document.querySelector('.custom-file-input').addEventListener('change',function(e){
+  document.querySelector('.custom-file-input').addEventListener('change', function (e) {
     var fileslength = document.getElementById("id_docfile").files.length
     if (fileslength == 1) {
       var fileName = document.getElementById("id_docfile").files[0].name;

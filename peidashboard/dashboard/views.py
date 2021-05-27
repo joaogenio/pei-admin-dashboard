@@ -98,9 +98,6 @@ class AgentUpdateViewSet(viewsets.ModelViewSet):
 	serializer_class = AgentUpdateSerializer
 	permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
-	def perform_create(self, serializer):
-		serializer.save()
-
 class CropViewSet(viewsets.ModelViewSet):
 	queryset = Crop.objects.all()
 	serializer_class = CropSerializer
@@ -215,3 +212,19 @@ def serve_file(request, context, slug=''):
 	return response
 	#return redirect('index')
 	#pass
+
+def control_view(request, id):
+	if request.method == 'POST':
+		print(id)
+		doc_pk = request.POST['doc_pk']
+		print(doc_pk)
+
+		update = AgentUpdate.objects.get(agent=id)
+		update.contentid = Document.objects.get(pk=doc_pk)
+		update.content_confirm = False
+		update.save()
+
+	agent = Agent.objects.get(pk=id)
+	documents = Document.objects.all()
+	context = {'documents': documents, 'agent': agent}
+	return render(request, 'control.html', context)

@@ -42,18 +42,14 @@ class AgentSerializer(serializers.HyperlinkedModelSerializer):
         fields = ['url', 'id', 'name', 'group']
 
 class AgentUpdateSerializer(serializers.HyperlinkedModelSerializer):
-    agent = AgentSerializer()
+    agent = AgentSerializer(read_only=True)
 
     class Meta:
         model = AgentUpdate
-        fields = ['url', 'agent', 'contentid', 'content_confirm']
-
-class CropSerializer(serializers.HyperlinkedModelSerializer):
-
-    class Meta:
-        model = Crop
-        fields = ['url', 'id', 'cropfile', 'content']
-
+        fields = ['url', 'agent', 'contentid', 'contentname', 'content_confirm']
+        extra_kwargs={
+            'contentname': {'read_only': True}
+        }
 
 class DocumentSerializer(serializers.HyperlinkedModelSerializer):
 
@@ -63,6 +59,12 @@ class DocumentSerializer(serializers.HyperlinkedModelSerializer):
         extra_kwargs={
             'docfile': {'write_only': True}
         }
+
+class CropSerializer(serializers.HyperlinkedModelSerializer):
+
+    class Meta:
+        model = Crop
+        fields = ['url', 'id', 'cropfile', 'content', 'agentid', 'interactiontime']
 
 class GroupSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
