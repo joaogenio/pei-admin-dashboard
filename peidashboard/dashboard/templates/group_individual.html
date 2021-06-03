@@ -1,0 +1,188 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+
+
+<br />
+<a href="/spaces">Spaces</a> > {{ group.space.name }} > {{ group.name }}
+<br /><br />
+
+<ul>
+    <p class="h2">
+        {{ group.name }}
+    </p>
+
+
+</ul>
+
+<br />
+{% if group.agent_set.all.count > 0 %}
+This groups' agents:
+<br /><br />
+<ul>
+
+    <div style="border-radius: 6px; padding: 0% 1% 0% 1%; background-color: #EEEEEE;">
+        {% for agent in group.agent_set.all %}
+
+        <p class="h6">[{{ agent.id }}] {{ agent.name }}</p>
+
+        {% endfor %}
+    </div>
+
+</ul>
+
+{% else %}
+<p>No agents.</p>
+{% endif %}
+
+<br />
+New program:
+<br />
+<ul>
+    <form action="{% url 'group_individual' group.id %}" method="POST">
+        {% csrf_token %}
+
+        <p>{{ programform.non_field_errors }}</p>
+
+        <input type="hidden" name="group" value="{{ group.id }}" id="id_group">
+
+        <div class="form-row">
+
+            <div class="form-group col-md">
+                <input class="form-control" placeholder="Name" type="text" name="name" maxlength="100" required=""
+                    id="id_name">
+            </div>
+            <div class="form-group col-auto">
+                <input class="form-control" type="text" name="start_date" value="2021-06-02 20:51:19" required=""
+                    id="id_start_date">
+            </div>
+            <div class="form-group col-auto">
+                <input class="btn btn-outline-dark" name="program_upload" type="submit" value="Submit" />
+            </div>
+        </div>
+
+    </form>
+
+</ul>
+
+<br />
+{% if group.contentprogram_set.all.count > 0 %}
+This groups' programs:
+<br /><br />
+<ul>
+
+    <div style="border-radius: 6px; padding: 2% 2% 0% 2%; background-color: #EEEEEE;">
+        {% for program in group.contentprogram_set.all %}
+
+
+        <form action="{% url 'group_individual' group.id %}" method="POST">
+            {% csrf_token %}
+
+            <div class="form-row">
+                <div class="form-group col-md">
+                    <span class="h4">{{ program.name }}</span>
+                </div>
+                <div class="form-group col-auto">
+                    <input type="hidden" name="program" value="{{ program.id }}" id="id_program">
+                    <input class="btn btn-outline-dark" name="program_delete" type="submit" value="Delete" />
+                </div>
+            </div>
+        </form>
+
+
+        <p class="h6">Start date: {{ program.start_date }}</p>
+
+        <br />
+        <ul>
+
+            New entry:
+
+            <br />
+            <ul>
+                <form action="{% url 'group_individual' group.id %}" method="POST">
+                    {% csrf_token %}
+
+                    <p>{{ entryform.non_field_errors }}</p>
+
+                    <input type="hidden" name="program" value="{{ program.id }}" id="id_program">
+
+                    <div class="form-row">
+
+                        <div class="form-group col-md">
+                            <select class="form-control" name="doc" required id="id_doc">
+                                <option selected="">Select document</option>
+
+                                {% for doc in documents %}
+
+                                <option value="{{ doc.id }}">{{ doc.docname }}</option>
+
+                                {% endfor %}
+
+                            </select>
+                        </div>
+
+                        <div class="form-group col-auto">
+                            <input class="form-control" placeholder="Duration (seconds)" type="number" name="duration"
+                                min="0" required id="id_duration">
+                        </div>
+                        <div class="form-group col-auto">
+                            <input class="btn btn-outline-dark" name="entry_upload" type="submit" value="Submit" />
+                        </div>
+                    </div>
+
+                </form>
+
+            </ul>
+
+            {% if program.programentry_set.all.count > 0 %}
+            Entries:
+            <ul>
+                <div style="border-radius: 6px; padding: 0% 1% 0% 1%; background-color: #DDDDDD;">
+                    {% for entry in program.programentry_set.all %}
+
+                    <form action="{% url 'group_individual' group.id %}" method="POST">
+                        {% csrf_token %}
+
+                        <div class="form-row">
+                            <div class="form-group col-md">
+                                <span class="h6">{{ entry.doc.docname }} - {{ entry.duration }}s</span>
+                            </div>
+                            <div class="form-group col-auto">
+                                <input type="hidden" name="entry" value="{{ entry.id }}" id="id_entry">
+                                <button name="entry_delete" type="submit" style="   background:none;
+                                                                                    border:none;
+                                                                                    margin:0;
+                                                                                    padding:0;
+                                                                                    cursor: pointer;">
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+
+                    {% endfor %}
+                </div>
+            </ul>
+            {% else %}
+            No entries.
+            {% endif %}
+
+
+
+        </ul>
+
+
+        <br />
+        {% endfor %}
+
+    </div>
+
+</ul>
+
+{% else %}
+<p>No programs.</p>
+{% endif %}
+
+
+{% endblock %}

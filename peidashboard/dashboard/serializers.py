@@ -1,8 +1,7 @@
 from django.contrib.auth.models import User, Group
 from rest_framework import serializers
 
-from .models import Space, AgentGroup, Agent, AgentUpdate, Document, Snippet, Crop, LANGUAGE_CHOICES, STYLE_CHOICES
-
+from .models import *
 
 class SnippetSerializer(serializers.HyperlinkedModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.username')
@@ -29,13 +28,39 @@ class SpaceSerializer(serializers.HyperlinkedModelSerializer):
         model = Space
         fields = ['url', 'id', 'name']
 
+class DocumentSerializer(serializers.HyperlinkedModelSerializer):
+
+    class Meta:
+        model=Document
+        fields=['url', 'id', 'title', 'downloadlink', 'docfile', 'docname', 'youtubelink']
+        extra_kwargs={
+            'docfile': {'write_only': True},
+            'docname': {'read_only': True}
+        }
+
+class ProgramEntrySerializer(serializers.HyperlinkedModelSerializer):
+    doc = DocumentSerializer()
+
+    class Meta:
+        model = ProgramEntry
+        fields = ['url', 'program', 'doc', 'duration']
+
+class ContentProgramSerializer(serializers.HyperlinkedModelSerializer):
+    programentry_set = ProgramEntrySerializer(read_only=True, many=True)
+
+    class Meta:
+        model = ContentProgram
+        fields = ['url', 'group', 'name', 'start_date', 'programentry_set']
+
 class AgentGroupSerializer(serializers.HyperlinkedModelSerializer):
+    contentprogram_set = ContentProgramSerializer(read_only=True, many=True)
 
     class Meta:
         model = AgentGroup
-        fields = ['url', 'id', 'name', 'space']
+        fields = ['url', 'id', 'name', 'space', 'contentprogram_set']
 
 class AgentSerializer(serializers.HyperlinkedModelSerializer):
+    group = AgentGroupSerializer()
 
     class Meta:
         model = Agent
@@ -51,14 +76,17 @@ class AgentUpdateSerializer(serializers.HyperlinkedModelSerializer):
             'contentname': {'read_only': True}
         }
 
-class DocumentSerializer(serializers.HyperlinkedModelSerializer):
+class StatsSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
-        model=Document
-        fields=['url', 'id', 'title', 'downloadlink', 'docfile']
-        extra_kwargs={
-            'docfile': {'write_only': True}
-        }
+        model = Stats
+        fields = ['url', 'id', 'agent', 'content', 'person']
+
+class PersonSerializer(serializers.HyperlinkedModelSerializer):
+
+    class Meta:
+        model = Person
+        fields = ['url', 'id', 'descriptor']
 
 class CropSerializer(serializers.HyperlinkedModelSerializer):
 

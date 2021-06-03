@@ -5,10 +5,9 @@ from django.contrib.auth.models import User, Group
 from rest_framework import viewsets
 from rest_framework import permissions
 
-from .serializers import SpaceSerializer, AgentGroupSerializer, AgentSerializer, AgentUpdateSerializer, UserSerializer, GroupSerializer, DocumentSerializer, CropSerializer
-from .forms import UploadFileForm
-from .models import Space, AgentGroup, Agent, AgentUpdate, Document, Crop
-
+from .serializers import *
+from .forms import *
+from .models import *
 
 # from django.http import HttpResponse, JsonResponse
 # from django.views.decorators.csrf import csrf_exempt
@@ -50,6 +49,8 @@ import sys
 from django.conf import settings
 
 from django.contrib.sites.shortcuts import get_current_site
+
+from django.shortcuts import get_object_or_404
 
 # Create your views here.
 # https://github.com/axelpale/minimal-django-file-upload-example/blob/master/src/for_django_3-0/myapp/views.py
@@ -93,9 +94,29 @@ class AgentViewSet(viewsets.ModelViewSet):
 	def perform_create(self, serializer):
 		serializer.save()
 
+class ContentProgramViewSet(viewsets.ModelViewSet):
+	queryset = ContentProgram.objects.all()
+	serializer_class = ContentProgramSerializer
+	permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+class ProgramEntryViewSet(viewsets.ModelViewSet):
+	queryset = ProgramEntry.objects.all()
+	serializer_class = ProgramEntrySerializer
+	permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
 class AgentUpdateViewSet(viewsets.ModelViewSet):
 	queryset = AgentUpdate.objects.all()
 	serializer_class = AgentUpdateSerializer
+	permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+class PersonViewSet(viewsets.ModelViewSet):
+	queryset = Person.objects.all()
+	serializer_class = PersonSerializer
+	permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+class StatsViewSet(viewsets.ModelViewSet):
+	queryset = Stats.objects.all()
+	serializer_class = StatsSerializer
 	permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 class CropViewSet(viewsets.ModelViewSet):
@@ -156,25 +177,51 @@ def index(request):
 	if request.user.is_authenticated:
 		form = UploadFileForm()
 		if request.method == 'POST':
+
 			if 'file_upload' in request.POST:
-				form = UploadFileForm(request.POST, request.FILES)
-				# Document.objects.all().delete()
-				if form.is_valid():
-					for f in request.FILES.getlist('docfile'):
-						#newdoc = Document(docfile=request.FILES['docfile'])
-						newdoc = Document(docfile=f, title=request.POST['title'])
+
+				###   FILE UPLOAD   ###
+				print("request.FILES.getlist('docfile')", request.FILES.getlist('docfile'))
+				if request.FILES.getlist('docfile') != []:
+					print("ISSA FILE")
+					form = UploadFileForm(request.POST, request.FILES)
+					# Document.objects.all().delete()
+					if form.is_valid():
+						for f in request.FILES.getlist('docfile'):
+							newdoc = Document(docfile=f, title=request.POST['title'])
+							newdoc.save()
+						return redirect('index')
+
+				###   YOUTUBE LINK UPLOAD   ###
+
+				else:
+					form = UploadFileForm(request.POST)
+					if form.is_valid():
+						newdoc = Document(youtubelink=request.POST['youtubelink'], title=request.POST['title'])
 						newdoc.save()
-					return redirect('index')
+						return redirect('index')
+
+			###   DELETE FILE   ###
+
 			elif 'doc_delete' in request.POST:
 				doc = Document.objects.get(id=int(request.POST['doc_pk']))
 				filename = os.path.dirname(os.path.abspath(__file__))+'/../media_cdn/'+str(doc.docfile)
 				#print("Deleting", 'media_cdn/'+str(doc.docfile))
-				#os.remove('/media_cdn/'+str(doc.docfile))
 				#print("Deleting", filename)
 				os.remove(filename)
 				doc.delete()
 			elif 'doc_download' in request.POST:
 				return serve_file(request, {})
+			
+			###   DELETE LINK   ###
+
+			elif 'link_delete' in request.POST:
+				doc = Document.objects.get(id=int(request.POST['doc_pk']))
+				doc.delete()
+
+		###   VIEW HANDLING   ###
+
+		#html = dir_tree_builder(os.path.dirname(os.path.abspath(__file__))+'/../media_cdn/media/')
 
 		documents = Document.objects.all()
 
@@ -182,6 +229,130 @@ def index(request):
 
 		return render(request, 'index.html', context)
 	return redirect('/api-auth/login/?next=/')
+
+def dir_tree_builder(dir):
+	print(sorted(list(os.listdir(dir))))
+	for file in sorted(list(os.listdir(dir))):
+		print(file, "dir?", os.path.isdir(dir+file))
+
+def group_individual(request, id):
+	if request.user.is_authenticated:
+		programform = ContentProgramForm()
+		entryform = ProgramEntryForm()
+		if request.method == 'POST':
+			if 'program_upload' in request.POST:
+				programform = ContentProgramForm(request.POST)
+				if programform.is_valid():
+					group = programform.cleaned_data['group']
+					name = programform.cleaned_data['name']
+					start_date = programform.cleaned_data['start_date']
+					program = ContentProgram(group=group, name=name, start_date=start_date)
+					program.save()
+			elif 'entry_upload' in request.POST:
+				entryform = ProgramEntryForm(request.POST)
+				if entryform.is_valid():
+					program = entryform.cleaned_data['program']
+					doc = entryform.cleaned_data['doc']
+					duration = entryform.cleaned_data['duration']
+					entry = ProgramEntry(program=program, doc=doc, duration=duration)
+					entry.save()
+			elif 'program_delete' in request.POST:
+				programid = request.POST['program']
+				program = ContentProgram.objects.get(pk=programid)
+				program.delete()
+			elif 'entry_delete' in request.POST:
+				entryid = request.POST['entry']
+				entry = ProgramEntry.objects.get(pk=entryid)
+				entry.delete()
+			return redirect('group_individual', id)
+		entries = ProgramEntry.objects.all()
+		group = get_object_or_404(AgentGroup, pk=id)
+		documents = Document.objects.all()
+		context = {'entries': entries, 'documents': documents, 'group': group, 'programform': programform, 'entryform': entryform}
+		return render(request, "group_individual.html", context)
+	return redirect('/api-auth/login/?next=/spaces')
+
+def agent_view(request):
+	if request.user.is_authenticated:
+		form = AgentForm()
+		if request.method == 'POST':
+
+			###   AGENT UPLOAD   ###
+
+			if 'agent_upload' in request.POST:
+				form = AgentForm(request.POST)
+				print(request.POST)
+				if form.is_valid():
+					id = form.cleaned_data['id']
+					name = form.cleaned_data['name']
+					group = form.cleaned_data['group']
+					print(id,name,group)
+					agent = Agent(id=id, name=name, group=group)
+					print(agent)
+					agent.save()
+					return redirect('agent_view')
+
+			###   DELETE AGENT   ###
+
+			elif 'agent_delete' in request.POST:
+				agent = Agent.objects.get(id=int(request.POST['agent_pk']))
+				agent.delete()
+
+		###   VIEW HANDLING   ###
+
+		agents = Agent.objects.all()
+		groups = AgentGroup.objects.all()
+
+		context = {'agents': agents, 'groups': groups, 'form': form}
+
+		return render(request, 'agent_view.html', context)
+	return redirect('/api-auth/login/?next=/agents')
+
+def space_view(request):
+	if request.user.is_authenticated:
+		spaceform = SpaceForm()
+		groupform = AgentGroupForm()
+		if request.method == 'POST':
+			if 'space_submit' in request.POST:
+				spaceform = SpaceForm(request.POST)
+				if spaceform.is_valid():
+					name = spaceform.cleaned_data['name']
+					space = Space(name=name)
+					space.save()
+					return redirect('space_view')
+			#elif 'group_submit' in request.POST:
+			#	groupform = AgentGroupForm(request.POST)
+			#	if groupform.is_valid():
+			#		name = groupform.cleaned_data['name']
+			#		space = groupform.cleaned_data['space']
+			#		group = AgentGroup(name=name, space=space)
+			#		group.save()
+			#		return redirect('space_view')
+		agents = Agent.objects.all()
+		groups = AgentGroup.objects.all()
+		spaces = Space.objects.all()
+		context = {'spaces': spaces, 'groups': groups, 'agents': agents,
+			'spaceform': spaceform, 'groupform': groupform}
+		return render(request, 'space_view.html', context)
+	return redirect('/api-auth/login/?next=/spaces')
+
+def space_create_group(request, space):
+	if request.user.is_authenticated:
+		if request.method == 'POST':
+			if 'group_submit' in request.POST:
+				groupform = AgentGroupForm(request.POST)
+				if groupform.is_valid():
+					name = groupform.cleaned_data['name']
+					space = Space.objects.get(pk=space)
+					group = AgentGroup(name=name, space=space)
+					group.save()
+					return redirect('space_view')
+				else:
+					# como reportar erros?? :S
+					return redirect('space_view')
+		else:
+			return redirect('/spaces')
+	return redirect('/api-auth/login/?next=/spaces')
 
 #@login_required
 def file_view(request, slug):

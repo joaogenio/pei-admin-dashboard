@@ -1,0 +1,91 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+
+<br />
+New agent:
+<br /><br />
+
+<ul>
+    <form action="{% url 'agent_view' %}" method="POST">
+        {% csrf_token %}
+
+        <p>{{ form.non_field_errors }}</p>
+
+        <div class="form-row">
+
+            <div class="form-group col-auto">
+                <input class="form-control" placeholder="ID" type="number" name="id" min="0" required="" id="id_id">
+            </div>
+
+
+            <div class="form-group col-md">
+                <select class="form-control" name="group" id="id_group">
+                    <option selected="">Select group</option>
+
+                    {% for group in groups %}
+
+                    <option value="{{ group.id }}">{{ group.name }}</option>
+
+                    {% endfor %}
+
+                </select>
+            </div>
+
+
+        </div>
+
+
+        <div class="form-row">
+
+            <div class="form-group col-md">
+                <input class="form-control" placeholder="Name" type="text" name="name" maxlength="100" required="" id="id_name">
+            </div>
+
+
+            <div class="form-group col-auto">
+                <input class="btn btn-outline-dark" name="agent_upload" type="submit" value="Submit" />
+            </div>
+        </div>
+
+    </form>
+</ul>
+<!-- List of uploaded documents -->
+{% if agents %}
+All agents in the database:
+<br /><br />
+<ul>
+
+
+    <table class="table table-striped table-hover">
+        <thead class="thead-dark">
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Name</th>
+                <th scope="col">Group</th>
+                <th scope="col"></th>
+            </tr>
+        </thead>
+        <tbody class="table-striped">
+            {% for agent in agents %}
+            <tr>
+                <td>{{ agent.id }}</td>
+                <td>{{ agent.name }}</td>
+                <td><a href="/groups/{{agent.group.id}}">{{ agent.group.name }}</a></td>
+                <td>
+                    <form action="" method="POST">
+                        {% csrf_token %}
+                        <input name="agent_pk" type="hidden" value="{{ agent.id }}" />
+                        <input class="btn btn-outline-dark" name="agent_delete" type="submit" value="Delete" />
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</ul>
+{% else %}
+<p>No Agents.</p>
+{% endif %}
+
+{% endblock %}

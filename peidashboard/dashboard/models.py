@@ -1,5 +1,6 @@
 from django.db import models
-from django.db.models.deletion import SET_NULL
+from django.db.models.base import Model
+from django.db.models.deletion import CASCADE, SET_NULL
 
 from pygments.lexers import get_all_lexers
 from pygments.styles import get_all_styles
@@ -15,6 +16,8 @@ import os
 from datetime import datetime
 
 import time
+
+from jsonfield import JSONField
 
 LEXERS = [item for item in get_all_lexers() if item[1]]
 LANGUAGE_CHOICES = sorted([(item[1][0], item[0]) for item in LEXERS])
@@ -49,20 +52,22 @@ class Snippet(models.Model):
 
 class Document(models.Model):
     created = models.DateTimeField(auto_now_add=True)
-    docfile = models.FileField(unique=True, upload_to='media')
+    docfile = models.FileField(upload_to='media')
     docname = models.CharField(max_length=100, blank=True, default='')
     title = models.CharField(max_length=100, blank=True, default='')
     downloadlink = models.URLField(editable=False, default='')
+    youtubelink = models.URLField(default='')
     # STATISTICS
-    #viewcount = models.PositiveIntegerField(default=0)
     viewtime = models.PositiveIntegerField(default=0)
 
     class Meta:
-        ordering = ['-created']
+        ordering = ['docfile']
 
     def save(self, *args, **kwargs):
-        self.downloadlink = 'http://'+settings.ALLOWED_HOSTS[0]+'/download/'+self.docfile.name.split('/')[-1]
-        self.docname = self.docfile.name.split('/')[-1]
+        if self.docfile != '':
+            self.downloadlink = 'http://'+settings.ALLOWED_HOSTS[0]+'/download/'+self.docfile.name.split('/')[-1]
+            self.docname = self.docfile.name.split('/')[-1]
+            print("saving docfile", self.docfile)
         super(Document, self).save(*args, **kwargs)
 
     @property
@@ -83,7 +88,7 @@ class Space(models.Model):
             newgroup.save()
 
 class AgentGroup(models.Model):
-    name = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=100)
     space = models.ForeignKey(Space, on_delete=models.CASCADE)
 
     class Meta:
@@ -94,7 +99,7 @@ class Agent(models.Model):
     group = models.ForeignKey(AgentGroup, null=True, on_delete=models.SET_NULL)
 
     class Meta:
-        ordering = ['group', 'name']
+        ordering = ['group', 'id']
     
     def save(self, *args, **kwargs):
         super(Agent, self).save(*args, **kwargs)
@@ -106,30 +111,44 @@ class Agent(models.Model):
             update.content_confirm = False
             update.save()
 
+class Person(models.Model):
+    descriptor = JSONField()
+
+class Stats(models.Model):
+    person = models.ForeignKey(Person, null=True, on_delete=models.CASCADE)
+    content = models.ForeignKey(Document, null=True, on_delete=models.CASCADE)
+    agent = models.ForeignKey(Agent, null=True, on_delete=models.CASCADE)
+
 class AgentUpdate(models.Model):
     agent = models.OneToOneField(
         Agent,
         on_delete=models.CASCADE,
         primary_key=True,
     )
-    urltoken = models.CharField(max_length=100, unique=True)
+    urltoken = models.CharField(max_length=100, null=True, unique=True)
     token_confirm = models.BooleanField(default=False)
     contentid = models.ForeignKey(Document, null=True, on_delete=models.SET_NULL)
     contentname = models.CharField(max_length=100, blank=True, default='')
     content_confirm = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
-        doc = Document.objects.get(pk=self.contentid.id)
-        self.contentname = doc.docfile.name.split('/')[-1]
+        if self.contentid != None:
+            doc = Document.objects.get(pk=self.contentid.id)
+            self.contentname = doc.docfile.name.split('/')[-1]
         super(AgentUpdate, self).save(*args, **kwargs)
 
 class ContentProgram(models.Model):
+    group = models.ForeignKey(AgentGroup, on_delete=CASCADE)
     name = models.CharField(max_length=100, unique=True)
     start_date = models.DateTimeField(default=datetime.now)
-    doc_order = models.CharField(max_length=200, unique=True)
 
     class Meta:
         ordering = ['start_date', 'name']
+
+class ProgramEntry(models.Model):
+    program = models.ForeignKey(ContentProgram, on_delete=models.CASCADE)
+    doc = models.ForeignKey(Document, null=True, on_delete=models.SET_NULL)
+    duration = models.PositiveIntegerField(default=10)
 
 class Crop(models.Model):
     cropfile = models.FileField(blank=True, upload_to='crops')

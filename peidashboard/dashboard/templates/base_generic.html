@@ -22,8 +22,27 @@
 
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav mr-auto">
-        <li class="nav-item active">
+        {% url 'index' as url %}
+        <li class="nav-item {% if request.path == url %}active{% endif %}">
           <a class="nav-link" href="{% url 'index' %}">Home <span class="sr-only">(current)</span></a>
+        </li>
+        {% url 'space_view' as url_spaces %}
+        {% url 'group_view' as url_groups %}
+        {% url 'agent_view' as url_agents %}
+        <li class="nav-item dropdown 
+        {% if request.path == url_spaces %}active
+        {% elif request.path == url_groups %}active
+        {% elif request.path == url_agents %}active
+        {% endif %}">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Manage
+          </a>
+          <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <a class="dropdown-item" href="/spaces">Spaces</a>
+            <!--<div class="dropdown-divider"></div>
+            <a class="dropdown-item" href="/groups">Groups</a>-->
+            <a class="dropdown-item" href="/agents">Agents</a>
+          </div>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="/api">API</a>
@@ -31,17 +50,6 @@
         <li class="nav-item">
           <a class="nav-link" href="/api-auth/logout/?next=/api/">Log out</a>
         </li>
-        <!--<li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            Dropdown
-          </a>
-          <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-            <a class="dropdown-item" href="#">Action</a>
-            <a class="dropdown-item" href="#">Another action</a>
-            <div class="dropdown-divider"></div>
-            <a class="dropdown-item" href="#">Something else here</a>
-          </div>
-        </li>-->
       </ul>
       <!--<form class="form-inline my-2 my-lg-0">
         <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
@@ -52,7 +60,7 @@
       <img src="/static/images/ua_logo.png" width="auto" height="30">
     </a>
   </nav>
-  <div class="col-sm-10 ">{% block content %}{% endblock %}</div>
+  <div class="col-sm-10 "><ul>{% block content %}{% endblock %}</ul></div>
 </body>
 
 <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>

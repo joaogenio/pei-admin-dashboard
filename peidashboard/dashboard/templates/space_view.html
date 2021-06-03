@@ -1,0 +1,88 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+
+
+<br />
+New space:
+<br /><br />
+
+<ul>
+    <form action="{% url 'space_view' %}" method="POST">
+        {% csrf_token %}
+
+        <p>{{ spaceform.non_field_errors }}</p>
+
+        <div class="form-row">
+            <div class="form-group col-md">
+                {{ spaceform.name.errors }}
+                <input class="form-control" placeholder="Name" type="text" name="name" maxlength="100" required="" id="id_name">
+            </div>
+
+            <div class="form-group col-auto">
+                <input class="btn btn-outline-dark" name="space_submit" type="submit" value="Submit" />
+            </div>
+        </div>
+
+    </form>
+</ul>
+
+{% if spaces %}
+All spaces in the database:
+<br /><br />
+<ul>
+
+    <div style="border-radius: 10px; padding: 0% 2% 3% 2%; background-color: #FFFFFF;">{% for space in spaces %}
+
+        <div style="padding: 3% 0% 0% 0%;" class="btn-group">
+            <span class="h4">
+                {{ space.name }}
+                <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-toggle="dropdown"
+                    aria-haspopup="true" aria-expanded="false">
+                    + Group
+                </button>
+                <div class="dropdown-menu">
+                    <form action="{% url 'space_create_group' space=space.id %}" method="POST" class="px-4 py-1">
+                        {% csrf_token %}
+                        <p>New group</p>
+                        <p>{{ groupform.non_field_errors }}</p>
+                        <div class="form-group">
+                            <input class="form-control" placeholder="Name" type="text" name="name" maxlength="100"
+                                required="" id="id_name">
+                            <input type="hidden" name="space" required="" value="{{ space.id }}" id="id_space">
+                        </div>
+                        <input class="btn btn-sm btn-outline-dark" name="group_submit" type="submit" value="Submit" />
+                    </form>
+                </div>
+            </span>
+        </div>
+
+        <div style="border-radius: 8px; margin-left: 2%; padding: 1%; background-color: #EEEEEE;">
+            {% for group in space.agentgroup_set.all %}
+
+            <p class="h5"><a href="/groups/{{group.id}}">{{ group.name }}</a></p>
+
+            <div style="border-radius: 6px; margin-left: 5%; padding: 0% 1% 0% 1%; background-color: #DDDDDD;">
+                {% for agent in group.agent_set.all %}
+
+                <p class="h6">[{{ agent.id }}] {{ agent.name }}</p>
+
+                {% endfor %}
+            </div>
+
+            {% endfor %}
+        </div>
+
+        {% endfor %}
+    </div>
+
+</ul>
+
+{% else %}
+<p>No spaces.</p>
+{% endif %}
+
+
+
+
+{% endblock %}
