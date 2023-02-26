@@ -1,6 +1,8 @@
 # pei-admin-dashboard
 PEI - Módulo Admin Dashboard
 
+### Máquina: Testado em Ubuntu 20.04
+
 setup de um virtual environment
 https://developer.mozilla.org/en-US/docs/Learn/Server-side/Django/development_environment
 ```
