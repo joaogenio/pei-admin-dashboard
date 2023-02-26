@@ -8,16 +8,76 @@
 <br /><br />
 
 <ul>
-    <p class="h2">
-        {{ group.name }}
-    </p>
+    <div class="float-left">
+        <p class="h2">
+            {{ group.name }}
+        </p>
+    </div>
 
+    <div class="float-right">
+        <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#myModal">Delete</button>
+    </div><br>
+
+
+    
+
+    <!-- Modal -->
+    <div id="myModal" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+    
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    {% if group.agent_set.all.count > 0 %}
+                        <p>CAREFUL</p>
+                        <p>
+                            {{ group.agent_set.all.count }}
+                            {% if group.agent_set.all.count == 1 %}
+                                agent belongs
+                            {% else %}
+                                agents belong
+                            {% endif %}
+                            to this group. They won't be deleted but they won't be associated with any group, therefore not displaying any contents.
+                        </p>
+                    {% else %}
+                        0 agents belong to this group. It is safe to delete.
+                    {% endif %}
+                </div>
+
+                <div class="modal-footer">
+
+                    <form action="{% url 'group_individual' group.id %}" method="POST">
+                        {% csrf_token %}
+                
+                        <input type="hidden" name="group" value="{{ group.id }}" id="id_group">
+                        <input class="btn btn-danger" name="group_delete" type="submit" value="Confirm Delete" />
+                    </form>
+
+                </div>
+            </div>
+    
+        </div>
+    </div>
+
+    
+
+
+
+    
+
+    
+
+
+    
 
 </ul>
 
 <br />
 {% if group.agent_set.all.count > 0 %}
-This groups' agents:
+This group's agents:
 <br /><br />
 <ul>
 
@@ -34,6 +94,8 @@ This groups' agents:
 {% else %}
 <p>No agents.</p>
 {% endif %}
+
+{% if group.contentprogram_set.all.count == 0 %}
 
 <br />
 New program:
@@ -53,11 +115,11 @@ New program:
                     id="id_name">
             </div>
             <div class="form-group col-auto">
-                <input class="form-control" type="text" name="start_date" value="2021-06-02 20:51:19" required=""
+                <input class="form-control" type="text" name="start_date" value="{{ actualtime }}" required=""
                     id="id_start_date">
             </div>
             <div class="form-group col-auto">
-                <input class="btn btn-outline-dark" name="program_upload" type="submit" value="Submit" />
+                <input class="btn btn-primary" name="program_upload" type="submit" value="Submit" />
             </div>
         </div>
 
@@ -65,9 +127,11 @@ New program:
 
 </ul>
 
+{% endif %}
+
 <br />
 {% if group.contentprogram_set.all.count > 0 %}
-This groups' programs:
+This group's programs:
 <br /><br />
 <ul>
 
@@ -84,7 +148,7 @@ This groups' programs:
                 </div>
                 <div class="form-group col-auto">
                     <input type="hidden" name="program" value="{{ program.id }}" id="id_program">
-                    <input class="btn btn-outline-dark" name="program_delete" type="submit" value="Delete" />
+                    <input class="btn btn-danger" name="program_delete" type="submit" value="Delete" />
                 </div>
             </div>
         </form>
@@ -96,7 +160,14 @@ This groups' programs:
         <ul>
 
             New entry:
-
+<!--
+            <form action="{% url 'group_individual' group.id %}" method="POST">
+                {% csrf_token %}
+                {{ entryform.non_field_errors }}
+                {{ entryform }}
+                <input class="btn btn-outline-dark" name="entry_upload" type="submit" value="Submit" />
+            </form>
+-->
             <br />
             <ul>
                 <form action="{% url 'group_individual' group.id %}" method="POST">
@@ -109,13 +180,11 @@ This groups' programs:
                     <div class="form-row">
 
                         <div class="form-group col-md">
-                            <select class="form-control" name="doc" required id="id_doc">
-                                <option selected="">Select document</option>
+                            <select class="form-control" name="content" required id="id_content">
+                                <option selected="">Select a document</option>
 
                                 {% for doc in documents %}
-
-                                <option value="{{ doc.id }}">{{ doc.docname }}</option>
-
+                                        <option value="{{ doc.id }}">{{ doc.docname }}</option>
                                 {% endfor %}
 
                             </select>
@@ -126,9 +195,40 @@ This groups' programs:
                                 min="0" required id="id_duration">
                         </div>
                         <div class="form-group col-auto">
-                            <input class="btn btn-outline-dark" name="entry_upload" type="submit" value="Submit" />
+                            <input class="btn btn-primary" name="entry_upload" type="submit" value="Submit" />
                         </div>
                     </div>
+
+                </form>
+                or
+                <form action="{% url 'group_individual' group.id %}" method="POST">
+                    {% csrf_token %}
+
+                    <p>{{ entryform.non_field_errors }}</p>
+
+                    <input type="hidden" name="program" value="{{ program.id }}" id="id_program">
+
+                    <div class="form-row">
+
+                        <div class="form-group col-md">
+                            <select class="form-control" name="ytcontent" required id="id_ytcontent">
+                                <option selected="">Select a YouTube video</option>
+
+                                {% for link in ytlinks %}
+                                        <option value="{{ link.id }}">{{ link.title }} - {{ link.pretty_duration }}</option>
+                                {% endfor %}
+
+                            </select>
+                        </div>
+
+                        <input type="hidden" class="form-control" placeholder="Duration (seconds)" type="number" name="duration"
+                                min="0" required id="id_duration" value="5">
+
+                        <div class="form-group col-auto">
+                            <input class="btn btn-primary" name="entry_upload" type="submit" value="Submit" />
+                        </div>
+                    </div>
+
 
                 </form>
 
@@ -145,7 +245,14 @@ This groups' programs:
 
                         <div class="form-row">
                             <div class="form-group col-md">
-                                <span class="h6">{{ entry.doc.docname }} - {{ entry.duration }}s</span>
+                                <span class="h6">
+                                    {% if entry.content %}
+                                        {{ entry.content.docname }}
+                                    {% elif entry.ytcontent %}
+                                        {{ entry.ytcontent.title }}
+                                    {% endif %}
+                                     - {{ entry.duration }}s
+                                </span>
                             </div>
                             <div class="form-group col-auto">
                                 <input type="hidden" name="entry" value="{{ entry.id }}" id="id_entry">
@@ -153,7 +260,8 @@ This groups' programs:
                                                                                     border:none;
                                                                                     margin:0;
                                                                                     padding:0;
-                                                                                    cursor: pointer;">
+                                                                                    cursor: pointer;
+                                                                                    color: red;">
                                     Delete
                                 </button>
                             </div>

@@ -31,6 +31,8 @@ from rest_framework.routers import DefaultRouter
 router = DefaultRouter()
 #router.register(r'snippets', views.SnippetViewSet)
 #router.register(r'users', views.UserViewSet)
+router.register(r'folders', views.FolderViewSet)
+router.register(r'ytlinks', views.YTLinkViewSet)
 router.register(r'documents', views.DocumentViewSet)
 router.register(r'crops', views.CropViewSet)
 router.register(r'agentupdates', views.AgentUpdateViewSet)
@@ -51,9 +53,11 @@ urlpatterns = [
 
     path('api/', include(router.urls), name='api'),
 
-    path('download/<slug>', views.file_view, name='file_view'),
+    path('download/<slug>', views.file_view, name='file_view'), # Downloads file
+    path('qr/<slug>', views.qr_view, name='qr_view'), # Downloads .png
+    path('view/<slug>', views.viewfile_view, name='viewfile_view'), # Views file
 
-    path('control/<int:id>', views.control_view, name='control_view'),
+    path('control/<hash>', views.control_view, name='control_view'),
 
     path('spaces/', views.space_view, name='space_view'),
     path('spaces/addgroup/<int:space>', views.space_create_group, name='space_create_group'),
@@ -64,6 +68,8 @@ urlpatterns = [
 
     path('agents/', views.agent_view, name='agent_view'),
     #path('agents/<int:id>', views.agent_individual, name='agent_individual'),
+
+    path('documents/<int:id>', views.document_individual, name='document_individual'),
 
 
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

@@ -10,28 +10,131 @@
     <!-- Add additional CSS in static file -->
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <style>
+        .logo {
+            font-size: 30px;
+            margin: 0;
+            padding: 0;
+            line-height: 1;
+            font-weight: 600;
+            letter-spacing: 0.8px;
+            font-family: "Poppins", sans-serif;
+        }
+
+        .nav-top {
+            height: 70px;
+        }
+
+        .check-us {
+            border-color: #32CD32;
+            color: #32CD32;
+        }
+
+        .a {
+            border: 1px solid red;
+            color: red;
+        }
+    </style>
 </head>
+
+
+
+
 
 <body>
 
-    <div class="col-lg ">
-    {% for document in documents %}
-    <br>
-        <form action="" method="POST">
-            {% csrf_token %}
-            <input name="doc_pk" type="hidden" value="{{ document.id }}" />
-            <input style="width: 100%;" class="btn btn-outline-dark" name="docname" type="submit"
-                value="{% if document.title != '' %}
-                            {{ document.title }}
-                        {% else %}
-                            {{ document.docname }}
-                        {% endif %}" />
-        </form>
-    {% endfor %}
-        <br>
+
+    <div style="display:block;">
+        <nav class="navbar navbar-dark bg-dark nav-top justify-content-between fixed-top">
+            <a class="navbar-brand logo">
+                Digi<span style="color: #32CD32;">UA</span>
+            </a>
+            <a class="check-us" href="https://pedrog-8.github.io/DigiUA">
+                <button class="btn btn-outline-success">
+                    Check us out!
+                </button>
+            </a>
+        </nav>
     </div>
 
+
+
+    <div style="padding: 8% 5%; margin-top: 10%; display:block;">
+
+        {% for entry in program.programentry_set.all %}
+        <br>
+
+        <form action="" method="POST">
+            {% csrf_token %}
+
+            <input name="entry_pk" type="hidden" value="{{ entry.id }}" />
+
+            {% if entry.content %}
+
+                {% if entry.content.pages != 0 %}
+                <input name="content_pk" type="hidden" value="{{ entry.content.id }}" />
+                <input name="ytcontent_pk" type="hidden" value="" />
+                <select class="form-control" name="content_page" onchange="javascript:this.form.submit()">
+                    <option value="0" type="submit">
+                        
+                        {{ entry.content.docname }}
+
+                        {% if entry.content.pages != 1 %}
+                        [{{ entry.content.pages }} pages]
+                        {% else %}
+                        [{{ entry.content.pages }} page]
+                        {% endif %}
+
+                    </option>
+                    {% for i in range %}
+                    {% if i <= entry.content.pages %} <option value="{{ i }}" type="submit">Page {{ i }}</option>
+                        {% endif %}
+                        {% endfor %}
+                </select>
+
+                {% else %}
+
+                <input name="content_pk" type="hidden" value="{{ entry.content.id }}" />
+                <input name="ytcontent_pk" type="hidden" value="" />
+
+                <input name="content_page" type="hidden" value="0" />
+                <button style="width: 100%; text-align: left;" class="btn btn-default btn-outline-primary" name="docname"
+                    type="submit">
+                    {{ entry.content.docname }}
+                </button>
+
+                {% endif %}
+
+
+            {% elif entry.ytcontent %}
+
+                <input name="content_pk" type="hidden" value="" />
+                <input name="ytcontent_pk" type="hidden" value="{{ entry.ytcontent.id }}" />
+
+                <input name="content_page" type="hidden" value="0" />
+                <button style="width: 100%; text-align: left;" class="btn btn-default btn-outline-primary" name="docname"
+                    type="submit">
+                    {{ entry.ytcontent.title }}
+                </button>
+            {% endif %}
+
+
+
+
+        </form>
+
+        {% endfor %}
+        <br>
+
+
+    </div>
+
+
 </body>
+
+
+
+
 
 <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
     integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"

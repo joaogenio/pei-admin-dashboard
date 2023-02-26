@@ -3,24 +3,11 @@ from rest_framework import serializers
 
 from .models import *
 
-class SnippetSerializer(serializers.HyperlinkedModelSerializer):
-    owner = serializers.ReadOnlyField(source='owner.username')
-    highlight = serializers.HyperlinkedIdentityField(
-        view_name='snippet-highlight', format='html')
-
-    class Meta:
-        model = Snippet
-        fields = ['url', 'id', 'highlight', 'owner',
-                  'title', 'code', 'linenos', 'language', 'style']
-
-
 class UserSerializer(serializers.HyperlinkedModelSerializer):
-    snippets = serializers.HyperlinkedRelatedField(
-        many=True, view_name='snippet-detail', read_only=True)
 
     class Meta:
         model = User
-        fields = ['url', 'id', 'username', 'snippets']
+        fields = ['url', 'id', 'username']
 
 class SpaceSerializer(serializers.HyperlinkedModelSerializer):
 
@@ -28,22 +15,34 @@ class SpaceSerializer(serializers.HyperlinkedModelSerializer):
         model = Space
         fields = ['url', 'id', 'name']
 
+class FolderSerializer(serializers.HyperlinkedModelSerializer):
+
+    class Meta:
+        model=Folder
+        fields=['url', 'id', 'parentdir', 'created', 'name']
+
+class YTLinkSerializer(serializers.HyperlinkedModelSerializer):
+
+    class Meta:
+        model=YTLink
+        fields=['url', 'id', 'parentdir', 'added', 'link', 'title', 'viewtime']
+
 class DocumentSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model=Document
-        fields=['url', 'id', 'title', 'downloadlink', 'docfile', 'docname', 'youtubelink']
+        fields=['url', 'id', 'parentdir', 'added', 'downloadlink', 'viewlink', 'docname', 'viewtime', 'pages']
         extra_kwargs={
-            'docfile': {'write_only': True},
             'docname': {'read_only': True}
         }
 
 class ProgramEntrySerializer(serializers.HyperlinkedModelSerializer):
-    doc = DocumentSerializer()
+    content = DocumentSerializer()
+    ytcontent = YTLinkSerializer()
 
     class Meta:
         model = ProgramEntry
-        fields = ['url', 'program', 'doc', 'duration']
+        fields = ['url', 'program', 'content', 'ytcontent', 'duration']
 
 class ContentProgramSerializer(serializers.HyperlinkedModelSerializer):
     programentry_set = ProgramEntrySerializer(read_only=True, many=True)
@@ -66,12 +65,20 @@ class AgentSerializer(serializers.HyperlinkedModelSerializer):
         model = Agent
         fields = ['url', 'id', 'name', 'group']
 
+class SimpleAgentSerializer(serializers.HyperlinkedModelSerializer):
+
+    class Meta:
+        model = Agent
+        fields = ['url', 'id', 'name', 'group']
+
 class AgentUpdateSerializer(serializers.HyperlinkedModelSerializer):
-    agent = AgentSerializer(read_only=True)
+    agent = SimpleAgentSerializer(read_only=True)
+    content = DocumentSerializer()
+    ytcontent = YTLinkSerializer()
 
     class Meta:
         model = AgentUpdate
-        fields = ['url', 'agent', 'contentid', 'contentname', 'content_confirm']
+        fields = ['url', 'agent', 'url_hash', 'expires', 'expires_max', 'content', 'ytcontent', 'contentpage', 'content_confirm']
         extra_kwargs={
             'contentname': {'read_only': True}
         }
@@ -80,7 +87,9 @@ class StatsSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Stats
-        fields = ['url', 'id', 'agent', 'content', 'person']
+        fields = ['url', 'id', 'agent', 'content', 'ytcontent', 'person',
+            'attention', 'neutral', 'happiness', 'surprise',
+            'sadness', 'anger', 'disgust', 'fear', 'contempt', 'frames']
 
 class PersonSerializer(serializers.HyperlinkedModelSerializer):
 
@@ -92,9 +101,4 @@ class CropSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Crop
-        fields = ['url', 'id', 'cropfile', 'content', 'agentid', 'interactiontime']
-
-class GroupSerializer(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model=Group
-        fields=['url', 'name']
+        fields = ['url', 'id', 'cropfile', 'content', 'ytcontent', 'agentid', 'interactiontime']

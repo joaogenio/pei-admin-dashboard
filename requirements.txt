@@ -1,0 +1,12 @@
+django~=3.1
+django-rest-framework
+opencv-python~=4.4.0.46
+cmake
+dlib~=19.21.1
+onnxruntime~=1.5.2
+jsonfield
+qrcode
+pypdf2
+pafy
+youtube-dl
+humanfriendly

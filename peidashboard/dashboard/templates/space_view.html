@@ -20,7 +20,7 @@ New space:
             </div>
 
             <div class="form-group col-auto">
-                <input class="btn btn-outline-dark" name="space_submit" type="submit" value="Submit" />
+                <input class="btn btn-primary" name="space_submit" type="submit" value="Submit" />
             </div>
         </div>
 
@@ -32,47 +32,102 @@ All spaces in the database:
 <br /><br />
 <ul>
 
-    <div style="border-radius: 10px; padding: 0% 2% 3% 2%; background-color: #FFFFFF;">{% for space in spaces %}
+    <div style="border-radius: 10px; padding: 0% 2% 3% 2%; background-color: #FFFFFF;">
+        {% for space in spaces %}
 
-        <div style="padding: 3% 0% 0% 0%;" class="btn-group">
-            <span class="h4">
-                {{ space.name }}
-                <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-toggle="dropdown"
-                    aria-haspopup="true" aria-expanded="false">
-                    + Group
-                </button>
-                <div class="dropdown-menu">
-                    <form action="{% url 'space_create_group' space=space.id %}" method="POST" class="px-4 py-1">
-                        {% csrf_token %}
-                        <p>New group</p>
-                        <p>{{ groupform.non_field_errors }}</p>
-                        <div class="form-group">
-                            <input class="form-control" placeholder="Name" type="text" name="name" maxlength="100"
-                                required="" id="id_name">
-                            <input type="hidden" name="space" required="" value="{{ space.id }}" id="id_space">
+            <div style="padding: 3% 0% 0% 0%;" >
+                
+                <span class="h4">
+                    
+                        {{ space.name }}
+                        <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                            New Group
+                        </button>
+                        <div class="dropdown-menu">
+                            <form action="{% url 'space_create_group' space=space.id %}" method="POST" class="px-4 py-1">
+                                {% csrf_token %}
+                                <p>New group</p>
+                                <p>{{ groupform.non_field_errors }}</p>
+                                <div class="form-group">
+                                    <input class="form-control" placeholder="Name" type="text" name="name" maxlength="100"
+                                        required="" id="id_name">
+                                    <input type="hidden" name="space" required="" value="{{ space.id }}" id="id_space">
+                                </div>
+                                <input class="btn btn-sm btn-primary" name="group_submit" type="submit" value="Submit" />
+                            </form>
                         </div>
-                        <input class="btn btn-sm btn-outline-dark" name="group_submit" type="submit" value="Submit" />
-                    </form>
+                </span>
+
+                <div class="float-right">
+                    <button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#myModal{{ space.id }}">Delete</button>
+                </div><br>
+            
+                <!-- Modal -->
+                <div id="myModal{{ space.id }}" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                {% if space.agentgroup_set.all.count > 0 %}
+                                    <p>CAREFUL</p>
+                                    <p>
+                                        {{ space.agentgroup_set.all.count }}
+                                        {% if space.agentgroup_set.all.count == 1 %}
+                                            group belongs
+                                        {% else %}
+                                            groups belong
+                                        {% endif %}
+                                        to this space. Their agents won't be deleted but they won't be associated with any group, therefore not displaying any contents.
+                                    </p>
+                                {% else %}
+                                    0 groups belong to this space. It is safe to delete.
+                                {% endif %}
+                            </div>
+            
+                            <div class="modal-footer">
+            
+                                <form action="{% url 'space_view' %}" method="POST">
+                                    {% csrf_token %}
+                                    
+                                    <input type="hidden" name="space" value="{{ space.id }}" id="id_space">
+                                    <input class="btn btn-danger" name="space_delete" type="submit" value="Delete" />
+                                    
+                                </form>
+            
+                            </div>
+                        </div>
+                
+                    </div>
                 </div>
-            </span>
-        </div>
 
-        <div style="border-radius: 8px; margin-left: 2%; padding: 1%; background-color: #EEEEEE;">
-            {% for group in space.agentgroup_set.all %}
-
-            <p class="h5"><a href="/groups/{{group.id}}">{{ group.name }}</a></p>
-
-            <div style="border-radius: 6px; margin-left: 5%; padding: 0% 1% 0% 1%; background-color: #DDDDDD;">
-                {% for agent in group.agent_set.all %}
-
-                <p class="h6">[{{ agent.id }}] {{ agent.name }}</p>
-
-                {% endfor %}
             </div>
 
-            {% endfor %}
-        </div>
+            
+            {% if space.agentgroup_set.all.count != 0 %}
+            <div style="border-radius: 8px; margin-top: 2%; margin-left: 2%; padding: 1%; background-color: #EEEEEE;">
+                {% for group in space.agentgroup_set.all %}
 
+                    <p class="h5"><a href="/groups/{{group.id}}">{{ group.name }}</a></p>
+
+                    <div style="border-radius: 6px; margin-left: 5%; padding: 0% 1% 0% 1%; background-color: #DDDDDD;">
+                        {% for agent in group.agent_set.all %}
+
+                        <p class="h6">[{{ agent.id }}] {{ agent.name }}</p>
+
+                        {% endfor %}
+                    </div>
+
+                    {% endfor %}
+            </div>
+            {% endif %}
+
+            
+        
         {% endfor %}
     </div>
 

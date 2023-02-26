@@ -1,16 +1,24 @@
 {% extends "base_generic.html" %}
 
 {% block content %}
-<!-- <h1>Local Library Home</h1>
-  <p>Welcome to LocalLibrary, a website developed by <em>Mozilla Developer Network</em>!</p>
-  <h2>Dynamic content</h2>
-  <p>The library has the following record counts:</p>
-  <ul>
-    <li><strong>Books:</strong> {{ num_books }}</li>
-    <li><strong>Copies:</strong> {{ num_instances }}</li>
-    <li><strong>Copies available:</strong> {{ num_instances_available }}</li>
-    <li><strong>Authors:</strong> {{ num_authors }}</li>
-  </ul> -->
+
+{% if folderform.errors.get_json_data.name.0.message %}
+<div class="alert alert-danger" role="alert">
+  {{ folderform.errors.get_json_data.name.0.message }}
+</div>
+{% endif %}
+
+{% if form.errors.get_json_data.parentdir.0.message %}
+<div class="alert alert-danger" role="alert">
+  {{ form.errors.get_json_data.parentdir.0.message }}
+</div>
+{% endif %}
+
+{% if msg %}
+<div class="alert alert-warning" role="alert">
+  {{ msg }}
+</div>
+{% endif %}
 
 <br />
 Upload documents:
@@ -20,16 +28,16 @@ Upload documents:
 
   <button id="showFileFormButton" class="btn btn-dark" onclick="showFileForm()">File</button>
   &nbsp;&nbsp;or&nbsp;&nbsp;
-  <button id="showYouTubeFormButton" class="btn btn-outline-dark" onclick="showYouTubeForm()">YouTube link</button>
+  <button id="showYouTubeFormButton" class="btn btn-outline-dark"
+    onclick="showYouTubeForm()">YouTube link</button>
+
+  <p></p>
 
   <form action="{% url 'index' %}" method="POST" enctype="multipart/form-data">
     {% csrf_token %}
-    {{ message }}
-
-    <p>{{ form.non_field_errors }}</p>
 
     <div style="display: block;" id="fileform" class="form-group">
-      {{ form.docfile.errors }}
+      
       <div class="form-group col-md custom-file">
         <input type="file" class="custom-file-input" name="docfile" multiple="" id="id_docfile">
         <label class="custom-file-label" for="id_docfile">Choose or drag files</label>
@@ -38,101 +46,356 @@ Upload documents:
 
     <div style="display: none;" id="youtubeform" class="form-row">
       <div class="form-group col">
-        <input class="form-control" type="url" placeholder="YouTube link" name="youtubelink" id="id_youtubelink">
+        <input class="form-control" type="url" placeholder="YouTube link"
+          name="link" id="id_link">
       </div>
     </div>
 
     <div class="form-row">
 
       <div class="form-group col-md">
-        {{ form.title.errors }}
-        <input class="form-control" type="text" name="title" maxlength="100" placeholder="Title" id="id_title">
+        <select class="form-control" name="parentdir" required=""
+          id="id_parentdir">
+          <option selected="">Select folder</option>
+
+          {% for folder in folders %}
+
+          <option value="{{ folder.id }}">{{ folder.name }}/</option>
+
+          {% endfor %}
+
+        </select>
+
       </div>
 
+
       <div class="form-group col-auto">
-        <input class="btn btn-outline-dark" name="file_upload" type="submit" value="Upload" />
+        <input class="btn btn-primary" name="file_upload" type="submit"
+          value="Upload" />
       </div>
+
 
     </div>
 
   </form>
+
+
+  
+
+  
 </ul>
 <!-- List of uploaded documents -->
-{% if documents %}
-All documents in the database:
-<br /><br />
-<ul>
-  <!-- { for document in documents %}
-  <li>
-    <form action="" method="POST">
-      {% csrf_token %}
-      <input name="doc_pk" type="hidden" value="{{ document.id }}" />
-      <input class="btn btn-outline-dark" name="doc_delete" type="submit" value="Delete" />
-      <input class="btn btn-outline-dark" name="doc_download" type="submit" value="Download" />
-      <a href="{{ document.downloadlink }}">{{ document.docfile.name }}</a> {{ document.title }} {{ document.viewcount
-      }} {{ document.viewtime }}
-    </form>
-  </li> -->
 
-  <table class="table table-striped table-hover">
-    <thead class="thead-dark">
-      <tr>
-        <th scope="col">ID</th>
-        <th scope="col">Document</th>
-        <th scope="col">Title</th>
-        <th scope="col">View Time</th>
-        <th scope="col"></th>
-        <th scope="col"></th>
-      </tr>
-    </thead>
-    <tbody class="table-striped">
-      {% for document in documents %}
-      <tr>
-        <td>{{ document.id }}</td>
-        <td>
-          {% if document.youtubelink == '' %}
-            {{ document.docname }}
-          {% else %}
-            {{ document.youtubelink }}
-          {% endif %}
-        </td>
-        <td>{{ document.title }}</td>
-        <td>{{ document.pretty_viewtime }}</td>
-        {% if document.youtubelink == '' %}
-          <td>
-            <form action="" method="POST">
-              {% csrf_token %}
-              <input name="doc_pk" type="hidden" value="{{ document.id }}" />
-              <input class="btn btn-outline-dark" name="doc_delete" type="submit" value="Delete" />
-            </form>
-          </td>
-          <td>
-            <form action="" method="POST">
-              {% csrf_token %}
-              <input name="doc_pk" type="hidden" value="{{ document.id }}" />
-              <input class="btn btn-outline-dark" name="doc_download" type="submit" value="Download" />
-            </form>
-          </td>
-        {% else %}
-          <td>
-            <form action="" method="POST">
-              {% csrf_token %}
-              <input name="doc_pk" type="hidden" value="{{ document.id }}" />
-              <input class="btn btn-outline-dark" name="link_delete" type="submit" value="Delete" />
-            </form>
-          </td>
-          <td></td>
-        {% endif %}
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</ul>
-{% else %}
-<p>No documents.</p>
-{% endif %}
+
+
+
+<br>
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Database Contents</h3>
+      </div>
+      <!-- ./card-header -->
+      <div class="card-body p-0">
+        <table class="table table-hover">
+          <tbody>
+            {% for element in tree %}
+              {% if element.0 == "YTLink" %}
+                  <tr onmouseout="hidebuttons('YTLink{{ element.1.id }}')" onmouseover="showbuttons('YTLink{{ element.1.id }}')">
+                    <form action="" method="POST">
+                      {% csrf_token %}
+                      <input name="link_pk" type="hidden" value="{{ element.1.id }}" />
+                      <td class="border-0">
+                        <i style="color: red;" class="infoicon fab fa-youtube"></i>
+                        <a href="/ytlinks/{{element.1.id}}">
+                          {{ element.1.title }}
+                        </a>
+                         - {{ element.1.pretty_duration }}
+                        <button class="operationicon astext" name="link_delete" type="submit">
+                          <i id="YTLink{{ element.1.id }}Delete" style="visibility: hidden;" class="fas fa-trash"></i>
+                        </button>
+                      </td>
+                    </form>
+                  </tr>
+              {% elif element.0 == "Document" %}
+                <tr onmouseout="hidebuttons('Document{{ element.1.id }}')" onmouseover="showbuttons('Document{{ element.1.id }}')">
+
+                  <form action="" method="POST">
+                    {% csrf_token %}
+                    <input name="doc_pk" type="hidden" value="{{ element.1.id }}" />
+
+                    <td class="border-0">
+                      {% if element.1.pages %}
+                        <i style="color: darkred;" class="infoicon fas fa-file-pdf"></i>
+                        <a href="/documents/{{element.1.id}}">
+                          {{ element.1.docname }}
+                        </a>
+                         - {{ element.1.pages }} Pages
+                      {% else %}
+                        <i style="color: black;" class="infoicon fas fa-file"></i>
+                        <a href="/documents/{{element.1.id}}">
+                          {{ element.1.docname }}
+                        </a>
+                      {% endif %}
+                      
+
+
+                      <button class="operationicon astext" name="doc_delete" type="submit">
+                        <i id="Document{{ element.1.id }}Delete" style="visibility: hidden;" class="fas fa-trash"></i>
+                      </button>
+
+
+                      <button class="operationicon astext" name="doc_download" type="submit">
+                        <i id="Document{{ element.1.id }}Download" style="visibility: hidden;" class="fas fa-download"></i>
+                      </button>
+                    </td>
+                  </form>
+                </tr>
+              {% elif element.0 == "Folder" %}
+                <tr onmouseout="hidebuttons('Folder{{ element.1.id }}')" onmouseover="showbuttons('Folder{{ element.1.id }}')" data-widget="expandable-table" aria-expanded="true">
+
+
+
+                    <td class="expandableFolder">
+                      <i style="color: gray;" class="expandable-table-caret fas fa-folder-open fa-fw"></i>
+                      <span class="foldername">{{ element.1.name }}</span>
+
+                      
+
+
+                      <button class="operationicon astext" data-toggle="modal" data-target="#myModal{{ element.1.id }}">
+                        <i id="Folder{{ element.1.id }}Minus" style="visibility: hidden;" class="fas fa-minus"></i>
+                      </button>
+                
+                      <!-- Modal -->
+                      <div id="myModal{{ element.1.id }}" class="modal fade" role="dialog">
+                          <div class="modal-dialog">
+                      
+                              <!-- Modal content-->
+                              <div class="modal-content">
+                                  <div class="modal-header">
+                                  <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                  </div>
+                                  <div class="modal-body">
+                                      {% if element.1.document_set.all.count > 0 or element.1.ytlink_set.all.count > 0 or element.1.folder_set.all.count > 0 %}
+                                          <p>CAREFUL</p>
+                                          <p>
+                                              Folder is not empty! Can't delete.
+                                          </p>
+                                      {% else %}
+                                          It is safe to delete this folder.
+                                      {% endif %}
+                                  </div>
+                  
+                                  <div class="modal-footer">
+                  
+                                    {% if element.1.document_set.all.count > 0 or element.1.ytlink_set.all.count > 0 or element.1.folder_set.all.count > 0 %}
+                                    {% else %}
+
+                                      <form action="" method="POST">
+                                        {% csrf_token %}
+                                        <input name="folder_pk" type="hidden" value="{{ element.1.id }}" />
+                                        <input class="btn btn-danger" name="folder_delete" type="submit" value="Confirm Delete" />
+                                      </form>
+
+                                    {% endif %}
+                  
+                                  </div>
+                              </div>
+                      
+                          </div>
+                      </div>
+
+
+
+
+
+
+
+
+
+
+                      
+
+                      <button class="operationicon astext" name="folder_create" data-toggle="modal" data-target="#CREATEmyModal{{ element.1.id }}">
+                        <i id="Folder{{ element.1.id }}Plus" style="visibility: hidden;" class="fas fa-plus"></i>
+                      </button>
+                
+                      <!-- Modal -->
+                      <div id="CREATEmyModal{{ element.1.id }}" class="modal fade" role="dialog">
+                        <div class="modal-dialog">
+                    
+                            <!-- Modal content-->
+                            <div class="modal-content">
+
+
+                              <form action="{% url 'index' %}" method="POST">
+                                {% csrf_token %}
+                                <input name="folder_pk" type="hidden" value="{{ element.1.id }}" />
+
+                                <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>
+                                      New Folder on {{ element.1.name }}
+                                    </p>
+
+                                    <input name="parentdir" type="hidden" value="{{ element.1.id }}" />
+                                
+                                    <label for="id_name">Name:</label>
+                                    <input type="text" name="name" maxlength="100" required="" id="id_name">
+
+                                </div>
+                
+                                <div class="modal-footer">
+
+                                        <input class="btn btn-primary" name="folder_create" type="submit" value="Create" />
+
+                                </div>
+
+                              </form>
+                            </div>
+                    
+                        </div>
+                      </div>
+            
+                    </td>
+
+
+                </tr>
+                <tr class="expandable-body">
+                  <td>
+                    <div class="p-0">
+                      <table class="table table-hover">
+                        <tbody>
+              {% elif element.0 == "CloseFolder" %}
+                        </tbody>
+                      </table>
+                    </div>
+                  </td>
+                </tr>
+              {% elif element.0 == "Root" %}
+                <tr onmouseout="hidebuttons('Folder{{ element.1.id }}')" onmouseover="showbuttons('Folder{{ element.1.id }}')" data-widget="expandable-table" aria-expanded="true">
+                  <td class="expandableFolder">
+                    <i style="color: gray;" class="expandable-table-caret fas fa-folder-open fa-fw"></i>
+                    <span class="foldername">Root</span>
+
+
+
+                    <button class="operationicon astext" name="folder_create" data-toggle="modal" data-target="#CREATEmyModal{{ element.1.id }}">
+                      <i id="Folder{{ element.1.id }}Plus" style="visibility: hidden;" class="fas fa-plus"></i>
+                    </button>
+              
+                    <!-- Modal -->
+                    <div id="CREATEmyModal{{ element.1.id }}" class="modal fade" role="dialog">
+                      <div class="modal-dialog">
+                  
+                          <!-- Modal content-->
+                          <div class="modal-content">
+
+
+                            <form action="{% url 'index' %}" method="POST">
+                              {% csrf_token %}
+                              <input name="folder_pk" type="hidden" value="{{ element.1.id }}" />
+
+                              <div class="modal-header">
+                              <button type="button" class="close" data-dismiss="modal">&times;</button>
+                              </div>
+                              <div class="modal-body">
+                                  <p>
+                                    New Folder on "Root"
+                                  </p>
+
+                                  <input name="parentdir" type="hidden" value="{{ element.1.id }}" />
+                              
+                                  <label for="id_name">Name:</label>
+                                  <input type="text" name="name" maxlength="100" required="" id="id_name">
+
+                              </div>
+              
+                              <div class="modal-footer">
+
+                                      <input class="btn btn-primary" name="folder_create" type="submit" value="Create" />
+
+                              </div>
+
+                            </form>
+                          </div>
+                  
+                      </div>
+                    </div>
+
+
+
+                  </td>
+
+                </tr>
+                <tr class="expandable-body">
+                  <td>
+                    <div class="p-0">
+                      <table class="table table-hover">
+                        <tbody>
+              {% endif %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <!-- /.card-body -->
+    </div>
+    <!-- /.card -->
+  </div>
+</div>
+<!-- SCRIPT FOR FOLDER ICONS -->
+
+
 
 <script>
+
+  function showbuttons(prefix) {
+    if (document.getElementById(prefix+'Plus') != null)
+      document.getElementById(prefix+'Plus').style.visibility = 'visible';
+    if (document.getElementById(prefix+'Minus') != null)
+      document.getElementById(prefix+'Minus').style.visibility = 'visible';
+    if (document.getElementById(prefix+'Download') != null)
+      document.getElementById(prefix+'Download').style.visibility = 'visible';
+    if (document.getElementById(prefix+'Delete') != null)
+      document.getElementById(prefix+'Delete').style.visibility = 'visible';
+  }
+
+  function hidebuttons(prefix) {
+    if (document.getElementById(prefix+'Plus') != null)
+      document.getElementById(prefix+'Plus').style.visibility = 'hidden';
+    if (document.getElementById(prefix+'Minus') != null)
+      document.getElementById(prefix+'Minus').style.visibility = 'hidden';
+    if (document.getElementById(prefix+'Download') != null)
+      document.getElementById(prefix+'Download').style.visibility = 'hidden';
+    if (document.getElementById(prefix+'Delete') != null)
+      document.getElementById(prefix+'Delete').style.visibility = 'hidden';
+  }
+
+  function changeFolderIcon(element) {
+    if ( element.childNodes[1].classList.contains("fa-folder-open") ) {
+      element.childNodes[1].classList.remove('fa-folder-open');
+      element.childNodes[1].classList.add('fa-folder');
+    } else {
+      element.childNodes[1].classList.remove('fa-folder');
+      element.childNodes[1].classList.add('fa-folder-open');
+    }
+  }
+
+  folders = document.getElementsByClassName("expandableFolder");
+
+  for (var i = 0; i < folders.length; i++) {
+    folders[i].addEventListener("click", function() {
+      changeFolderIcon(this);
+    }, false);
+  }
+
+
+
+
   document.querySelector('.custom-file-input').addEventListener('change', function (e) {
     var fileslength = document.getElementById("id_docfile").files.length
     if (fileslength == 1) {
@@ -159,7 +422,7 @@ All documents in the database:
   function showFileForm() {
     var fileform = document.getElementById("fileform");
     var youtubeform = document.getElementById("youtubeform");
-    var ytinput = document.getElementById("id_youtubelink");
+    var ytinput = document.getElementById("id_link");
     var showFileFormButton = document.getElementById("showFileFormButton");
     var showYouTubeFormButton = document.getElementById("showYouTubeFormButton");
     fileform.style.display = "block";
@@ -170,5 +433,4 @@ All documents in the database:
   }
 
 </script>
-
 {% endblock %}

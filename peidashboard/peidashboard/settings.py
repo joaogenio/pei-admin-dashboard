@@ -22,13 +22,14 @@ BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '5tsso3er4@!m(zh)h&qa&dqy=q6m+8eqnrizzw+zb=z*zhnx-3'
+SECRET_KEY = '5tsao3er4@!m(zh)h&ab&dqy=q6m+8eznrazzw+zb=z*zhzx-3'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
+#DEBUG = True
 
-ALLOWED_HOSTS = ['dashboard.pei','127.0.0.1', 'localhost']
-#ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+
 
 # Application definition
 
@@ -137,3 +138,5 @@ REST_FRAMEWORK = {
 #MEDIA_URL = "/media_cdn/"
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media_cdn')
 #MEDIA_ROOT = 'media_cdn'
+
+DEFAULT_AUTO_FIELD='django.db.models.AutoField'

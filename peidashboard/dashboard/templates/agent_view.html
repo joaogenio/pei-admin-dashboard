@@ -44,7 +44,7 @@ New agent:
 
 
             <div class="form-group col-auto">
-                <input class="btn btn-outline-dark" name="agent_upload" type="submit" value="Submit" />
+                <input class="btn btn-primary" name="agent_upload" type="submit" value="Submit" />
             </div>
         </div>
 
@@ -63,6 +63,7 @@ All agents in the database:
                 <th scope="col">ID</th>
                 <th scope="col">Name</th>
                 <th scope="col">Group</th>
+                <th scope="col">QR Code Expiration Date</th>
                 <th scope="col"></th>
             </tr>
         </thead>
@@ -70,13 +71,27 @@ All agents in the database:
             {% for agent in agents %}
             <tr>
                 <td>{{ agent.id }}</td>
-                <td>{{ agent.name }}</td>
+                <td><a href="/api/agent/{{agent.id}}">{{ agent.name }}</a></td>
                 <td><a href="/groups/{{agent.group.id}}">{{ agent.group.name }}</a></td>
+
+                <td>
+                    <a href="/control/{{agent.update.url_hash}}">Control Page</a> - <a href="/api/agentupdates/{{agent.id}}">API</a><br>
+                    {% if agent.update.expires == None %}
+                        <span style="color: gray;"> (Never)</span>
+                    {% elif agent.update.timesince > 1800 %}
+                        {{ agent.update.expires }} <br><span style="color: red;"> ({{ agent.update.pretty_timesince }} ago)</span>
+                    {% elif agent.update.timesince > 0 %}
+                        {{ agent.update.expires }} <br><span style="color: green;"> ({{ agent.update.pretty_timesince }} ago)</span>
+                    {% else %}
+                        {{ agent.update.expires }} <br><span style="color: green;"> ({{ agent.update.pretty_timesince }})</span>
+                    {% endif %}
+                </td>
+
                 <td>
                     <form action="" method="POST">
                         {% csrf_token %}
                         <input name="agent_pk" type="hidden" value="{{ agent.id }}" />
-                        <input class="btn btn-outline-dark" name="agent_delete" type="submit" value="Delete" />
+                        <input class="btn btn-danger" name="agent_delete" type="submit" value="Delete" />
                     </form>
                 </td>
             </tr>

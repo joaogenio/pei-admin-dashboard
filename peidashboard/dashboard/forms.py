@@ -1,13 +1,27 @@
 from rest_framework import fields
-from dashboard.models import Agent, AgentGroup, ContentProgram, ProgramEntry, Space
+from dashboard.models import *
 from django import forms
 from django.forms.models import ModelForm
 from django.forms import ValidationError
 
+class FolderForm(forms.Form):
+    parentdir = forms.ModelChoiceField(queryset=Folder.objects.all()) # required = True
+    name = forms.CharField(label='Name', max_length=100)
+
+    def clean(self):
+        cd = self.cleaned_data
+
+        for folder in Folder.objects.all():
+            if folder.name == cd.get("name"):
+                raise ValidationError({'name': ["Sorry. You can't name another folder '"+ folder.name +"'.",]})
+
+class YTLinkForm(forms.Form):
+    parentdir = forms.ModelChoiceField(queryset=Folder.objects.all())
+    link = forms.URLField(empty_value='', required=False)
+
 class UploadFileForm(forms.Form):
-    title = forms.CharField(label='Title', required=False, max_length=100)
-    docfile = forms.FileField(label='Insert file', required=False, widget=forms.ClearableFileInput(attrs={'multiple': True}))
-    youtubelink = forms.URLField(empty_value='', required=False)
+    parentdir = forms.ModelChoiceField(queryset=Folder.objects.all())
+    docfile = forms.FileField(label='Insert file', widget=forms.ClearableFileInput(attrs={'multiple': True}))
 
 class SpaceForm(ModelForm):
     class Meta:
@@ -36,9 +50,12 @@ class AgentForm(forms.Form):
         return cd
 
 class ProgramEntryForm(ModelForm):
+    content = forms.ModelChoiceField(queryset=Document.objects.all(), required=False)
+    ytcontent = forms.ModelChoiceField(queryset=YTLink.objects.all(), required=False)
+
     class Meta:
         model = ProgramEntry
-        fields = ['program', 'doc', 'duration']
+        fields = ['program', 'content', 'ytcontent', 'duration']
 
 class ContentProgramForm(ModelForm):
     class Meta:

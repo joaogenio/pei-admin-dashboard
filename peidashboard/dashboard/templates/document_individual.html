@@ -1,0 +1,360 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+
+
+<br />
+<a href="/">Documents</a>
+> {{ document.docname }}
+{% if document.title != '' %}
+- {{ document.title }}
+{% endif %}
+<br /><br />
+
+<ul>
+    <p class="h2">
+        {% if document.title != '' %}
+        {{ document.title }}
+        {% else %}
+        {{ document.docname }}
+        {% endif %}
+    </p>
+</ul>
+
+<br />
+
+{% if document.stats_set.all.count > 0 %}
+This document's stats:
+<br /><br />
+<ul>
+
+    <div style="content: '';
+                display: table;
+                clear: both;
+                width: 100%;
+                height: 100%;">
+        <div style="float:left; width: 25%; height: 100%;
+                    border-style: solid;
+                    border-width: 1px 0px 1px 1px;
+                    border-radius: 6px 0px 0px 6px;
+                    border-color: gray; background-color: #EEEEEE;
+                    text-align: center;
+                    padding: 16px 0 0 0;">
+            <p><b>Total view time</b></p>
+            <p>{{ document.pretty_viewtime }}</p>
+        </div>
+        <div style="float:left; width: 25%; height: 100%;
+                    border-style: solid;
+                    border-width: 1px 0px 1px 1px;
+                    border-radius: 0px;
+                    border-color: gray; background-color: #EEEEEE;
+                    text-align: center;
+                    padding: 16px 0 0 0;">
+            <p><b>View count</b></p>
+            <p>
+                {{ view_count }}
+                {% if view_count == 1 %}
+                view
+                {% else %}
+                views
+                {% endif %}
+            </p>
+        </div>
+        <div style="float:left; width: 25%; height: 100%;
+                    border-style: solid;
+                    border-width: 1px 0px 1px 1px;
+                    border-radius: 0px;
+                    border-color: gray; background-color: #EEEEEE;
+                    text-align: center;
+                    padding: 16px 0 0 0;">
+            <p><b>Average attention</b></p>
+            <p>{{ attention_avg }} %</p>
+        </div>
+        <div style="float:left; width: 25%; height: 100%;
+                    border-style: solid;
+                    border-width: 1px;
+                    border-radius: 0px 6px 6px 0px;
+                    border-color: gray; background-color: #EEEEEE;
+                    text-align: center;
+                    padding: 16px 0 0 0;">
+            <p><b>Emotions</b></p>
+            <p>
+                across {{ stats.count }}
+                {% if stats.count == 1 %}
+                agent
+                {% else %}
+                agents
+                {% endif %}
+            </p>
+        </div>
+    </div>
+</ul>
+<br />
+
+
+<br /><br />
+<ul>
+
+    <div style="padding: 0 30% 0% 30%;">
+        <canvas id="emotionchart"></canvas>
+    </div>
+    <canvas id="attentionchart" height="100px"></canvas>
+    <canvas id="viewcountchart" height="100px"></canvas>
+    <canvas id="viewtimechart" height="100px"></canvas>
+
+</ul>
+<br />
+
+{% else %}
+No stats for this document
+{% endif %}
+<br />
+
+{{ data1|json_script:"data1" }}
+{{ data2|json_script:"data2" }}
+{{ data3|json_script:"data3" }}
+{{ data4|json_script:"data4" }}
+{{ labels1|json_script:"labels1" }}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.3.2/chart.js"
+    integrity="sha512-CAv0l04Voko2LIdaPmkvGjH3jLsH+pmTXKFoyh5TIimAME93KjejeP9j7wSeSRXqXForv73KUZGJMn8/P98Ifg=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<script>
+    var SecondsTohhmmss = function (totalSeconds) {
+        var hours = Math.floor(totalSeconds / 3600);
+        var minutes = Math.floor((totalSeconds - (hours * 3600)) / 60);
+        var seconds = totalSeconds - (hours * 3600) - (minutes * 60);
+
+        // round seconds
+        seconds = Math.round(seconds * 100) / 100
+
+        var result = (hours < 10 ? "0" + hours : hours);
+        result += ":" + (minutes < 10 ? "0" + minutes : minutes);
+        result += ":" + (seconds < 10 ? "0" + seconds : seconds);
+        console.log(result)
+        return result;
+    }
+
+    const CHART_COLORS = {
+        red: 'rgb(255, 99, 132)',
+        orange: 'rgb(255, 159, 64)',
+        yellow: 'rgb(255, 205, 86)',
+        green: 'rgb(75, 192, 192)',
+        blue: 'rgb(54, 162, 235)',
+        purple: 'rgb(153, 102, 255)',
+        grey: 'rgb(201, 203, 207)',
+        magenta: 'rgb(242, 155, 242)'
+    };
+
+
+    var ctx = document.getElementById('viewcountchart').getContext('2d');
+    const data2 = JSON.parse(document.getElementById('data2').textContent);
+    const labels1 = JSON.parse(document.getElementById('labels1').textContent);
+    console.log("Creating chart")
+
+    var myChart2 = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels1,
+            datasets: [
+                {
+                    label: 'Agents',
+                    data: data2,
+                    backgroundColor: 'rgba(255, 205, 86, 0.5)',
+                    borderColor: CHART_COLORS.yellow,
+                    borderWidth: 4
+                }
+            ]
+        },
+        options: {
+            plugins: {
+                legend: {
+                    position: ''
+                },
+                title: {
+                    display: true,
+                    text: 'Unique view count from all agents'
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Agents'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'View count'
+                    },
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            },
+            interaction: {
+                mode: 'index',
+                intersect: false
+            }
+        }
+    });
+
+
+
+    var ctx = document.getElementById('emotionchart').getContext('2d');
+    const data4 = JSON.parse(document.getElementById('data4').textContent);
+    console.log("Creating chart")
+
+    var myChart4 = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['Neutral', 'Happiness', 'Surprise', 'Sadness', 'Anger', 'Disgust', 'Fear', 'Contempt'],
+            datasets: [
+                {
+                    label: 'Emotions',
+                    data: data4,
+                    backgroundColor: Object.values(CHART_COLORS),
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                }
+            }
+        }
+    });
+
+
+
+
+
+
+
+    var ctx = document.getElementById('attentionchart').getContext('2d');
+    const data3 = JSON.parse(document.getElementById('data3').textContent);
+    console.log("Creating chart")
+
+    var myChart3 = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels1,
+            datasets: [
+                {
+                    label: 'Agents',
+                    data: data3,
+                    backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                    borderColor: CHART_COLORS.red,
+                    borderWidth: 4
+                }
+            ]
+        },
+        options: {
+            plugins: {
+                legend: {
+                    position: ''
+                },
+                title: {
+                    display: true,
+                    text: 'Attention % across all agents'
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Agents'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Attention %'
+                    },
+                    min: 0,
+                    max: 100
+                }
+            },
+            interaction: {
+                mode: 'index',
+                intersect: false
+            }
+        }
+    });
+
+
+
+    var ctx = document.getElementById('viewtimechart').getContext('2d');
+    const data1 = JSON.parse(document.getElementById('data1').textContent);
+    console.log("Creating chart")
+
+    const footer = (tooltipItems) => {
+        console.log(tooltipItems['0']['parsed']['y'])
+        return SecondsTohhmmss(tooltipItems['0']['parsed']['y'])
+    };
+
+    var myChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels1,
+            datasets: [
+                {
+                    label: 'Agents',
+                    data: data1,
+                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                    borderColor: CHART_COLORS.blue,
+                    borderWidth: 4
+                }
+            ]
+        },
+        options: {
+            plugins: {
+                legend: {
+                    position: ''
+                },
+                title: {
+                    display: true,
+                    text: 'View time from all agents'
+                },
+                tooltip: {
+                    callbacks: {
+                        footer: footer
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Agents'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Time'
+                    },
+                    ticks: {
+                        // For a category axis, the val is the index so the lookup via getLabelForValue is needed
+                        callback: function (val, index) {
+                            // Hide the label of every 2nd dataset
+                            return SecondsTohhmmss(val);
+                        }
+                    }
+                }
+            },
+            interaction: {
+                mode: 'index',
+                intersect: false
+            }
+        }
+    });
+</script>
+
+
+
+{% endblock %}
