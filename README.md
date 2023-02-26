@@ -104,7 +104,8 @@ apxs -cia mod_xsendfile.c
 sudo apachectl restart
 ```
 
-notar que ‘mainpei-deploy’ é o repositório da aplicação de dashboard
+notar que ‘mainpei-deploy’ é o repositório da aplicação de dashboard.
+poderá ser 'pei-admin-dashboard'
 ```
 cd /var/www
 git clone https://...
